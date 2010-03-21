@@ -3,7 +3,7 @@
 "VSVersion" = "3:701"
 "ProjectType" = "8:{AB322303-2255-48EF-A496-5904EB18DA55}"
 "IsWebType" = "8:FALSE"
-"ProjectName" = "8:cab"
+"ProjectName" = "8:iContactSetup"
 "LanguageId" = "3:1033"
 "CodePage" = "3:1252"
 "SccProjectName" = "8:"
@@ -14,37 +14,43 @@
     {
         "Entry"
         {
-        "MsmKey" = "8:_150899B52B654B6F8BB886008F2F458B"
+        "MsmKey" = "8:_32DAEBE67EE34E7D88E4B8E3D755B50B"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_170731C4D98F4F02BDB1C1B724FE3677"
+        "MsmKey" = "8:_8B13E851ED1B4D23B3A1B676045572C9"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_647EFA11DEDA4AD891E0CD36DE14372D"
+        "MsmKey" = "8:_9E089AEC6DD64A359E24FB9E5DC7450D"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_69BB95C43B4140DDBEDD33449E536309"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_DC572D43BAA54E648EFA90B71A7C3CB1"
+        "MsmKey" = "8:_E80FAB727A124733AE3183CE5DEBC81E"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_E8FF282E690145879532F5C1A14DA9A3"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_EB108E3CD22F468D8CF512AAAAE9BCCC"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_FCD06C8B54D14D5BBB997BD9942D4BB4"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -56,7 +62,7 @@
         "DisplayName" = "8:Debug"
         "IsDebugOnly" = "11:TRUE"
         "IsReleaseOnly" = "11:FALSE"
-        "OutputFilename" = "8:Debug\\iContactDEBUG.cab"
+        "OutputFilename" = "8:Debug\\iContactSetup.cab"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
         "SignOutput" = "11:FALSE"
@@ -80,12 +86,12 @@
     {
         "File"
         {
-            "{BA458234-9B71-4F46-8107-E91156377184}:_150899B52B654B6F8BB886008F2F458B"
+            "{BA458234-9B71-4F46-8107-E91156377184}:_32DAEBE67EE34E7D88E4B8E3D755B50B"
             {
-            "SourcePath" = "8:..\\data\\english.lng"
-            "TargetName" = "8:english.lng"
+            "SourcePath" = "8:..\\iContact\\iContact.ico"
+            "TargetName" = "8:net.supware.icontact.ico"
             "Tag" = "8:"
-            "Folder" = "8:_21556AC0572C490981F786B2356F86D1"
+            "Folder" = "8:_1F59A5392C404C53BCDCAC49FE94D333"
             "Condition" = "8:"
             "Vital" = "11:TRUE"
             "ReadOnly" = "11:FALSE"
@@ -98,27 +104,9 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{BA458234-9B71-4F46-8107-E91156377184}:_170731C4D98F4F02BDB1C1B724FE3677"
+            "{BA458234-9B71-4F46-8107-E91156377184}:_8B13E851ED1B4D23B3A1B676045572C9"
             {
-            "SourcePath" = "8:..\\data\\default.png"
-            "TargetName" = "8:default.png"
-            "Tag" = "8:"
-            "Folder" = "8:_21556AC0572C490981F786B2356F86D1"
-            "Condition" = "8:"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "Register" = "3:0"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{BA458234-9B71-4F46-8107-E91156377184}:_647EFA11DEDA4AD891E0CD36DE14372D"
-            {
-            "SourcePath" = "8:..\\data\\net.supware.icontact.xml"
+            "SourcePath" = "8:net.supware.icontact.xml"
             "TargetName" = "8:net.supware.icontact.xml"
             "Tag" = "8:"
             "Folder" = "8:_1F59A5392C404C53BCDCAC49FE94D333"
@@ -134,12 +122,66 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{BA458234-9B71-4F46-8107-E91156377184}:_69BB95C43B4140DDBEDD33449E536309"
+            "{BA458234-9B71-4F46-8107-E91156377184}:_9E089AEC6DD64A359E24FB9E5DC7450D"
             {
-            "SourcePath" = "8:..\\data\\Outlook Contacts.txt"
-            "TargetName" = "8:Outlook Contacts.lnk"
+            "SourcePath" = "8:..\\iContact\\default.skn"
+            "TargetName" = "8:default.skn"
             "Tag" = "8:"
-            "Folder" = "8:_BCBFD52860BB4EF5A89A28F76F284C80"
+            "Folder" = "8:_21556AC0572C490981F786B2356F86D1"
+            "Condition" = "8:"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "Register" = "3:0"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{BA458234-9B71-4F46-8107-E91156377184}:_E80FAB727A124733AE3183CE5DEBC81E"
+            {
+            "SourcePath" = "8:..\\iContact\\default.png"
+            "TargetName" = "8:default.png"
+            "Tag" = "8:"
+            "Folder" = "8:_21556AC0572C490981F786B2356F86D1"
+            "Condition" = "8:"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "Register" = "3:0"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{BA458234-9B71-4F46-8107-E91156377184}:_EB108E3CD22F468D8CF512AAAAE9BCCC"
+            {
+            "SourcePath" = "8:..\\iContact\\english.lng"
+            "TargetName" = "8:english.lng"
+            "Tag" = "8:"
+            "Folder" = "8:_21556AC0572C490981F786B2356F86D1"
+            "Condition" = "8:"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "Register" = "3:0"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{BA458234-9B71-4F46-8107-E91156377184}:_FCD06C8B54D14D5BBB997BD9942D4BB4"
+            {
+            "SourcePath" = "8:..\\iContact\\settings.ini"
+            "TargetName" = "8:settings.ini"
+            "Tag" = "8:"
+            "Folder" = "8:_21556AC0572C490981F786B2356F86D1"
             "Condition" = "8:"
             "Vital" = "11:TRUE"
             "ReadOnly" = "11:FALSE"
@@ -163,24 +205,6 @@
             "Property" = "8:%InstallDir%"
                 "Folders"
                 {
-                }
-            }
-            "{F6DFDB62-1DD1-498B-89B7-27BAC542EE5A}:_224510189B014E91AB5F1CE9A1074517"
-            {
-            "Name" = "8:#1919"
-            "Condition" = "8:"
-            "Property" = "8:%CE17%"
-                "Folders"
-                {
-                    "{5943FCFD-5B64-4EE4-96C9-4618EC95352A}:_0CD25DE9E9F14600BEAD24EA0CF30D4C"
-                    {
-                    "Name" = "8:Settings"
-                    "Condition" = "8:"
-                    "Property" = "8:_94B6E795302D4B89BDC252C0AB5A4FB5"
-                        "Folders"
-                        {
-                        }
-                    }
                 }
             }
             "{27CA7284-31D3-408F-812A-1EF9ACCDB822}:_7DA8CB98FE6B40289DDA098B67A77F36"
@@ -219,40 +243,14 @@
         "OSVersionMin" = "8:4.0"
         "OSVersionMax" = "8:6.99"
         "NoUninstall" = "11:FALSE"
-        "Compress" = "11:TRUE"
+        "Compress" = "11:FALSE"
         "CESetupDLL" = "8:"
         }
         "ProjectOutput"
         {
-            "{605BE39E-5046-48BD-AEC0-63C3A46626D5}:_DC572D43BAA54E648EFA90B71A7C3CB1"
-            {
-            "SourcePath" = "8:..\\Settings\\Windows Mobile 5.0 Pocket PC SDK (ARMV4I)\\Release\\Settings.exe"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_21556AC0572C490981F786B2356F86D1"
-            "Condition" = "8:"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "Register" = "3:0"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            "ProjectOutputGroupRegister" = "3:0"
-            "OutputConfiguration" = "8:"
-            "OutputGroupCanonicalName" = "8:Built"
-            "OutputProjectGuid" = "8:{5CC3014A-76A3-43B0-9A00-851859C318BC}"
-            "ShowKeyOutput" = "11:TRUE"
-                "ExcludeFilters"
-                {
-                }
-            }
             "{605BE39E-5046-48BD-AEC0-63C3A46626D5}:_E8FF282E690145879532F5C1A14DA9A3"
             {
-            "SourcePath" = "8:..\\iContact\\Windows Mobile 5.0 Pocket PC SDK (ARMV4I)\\Release\\iContact.exe"
+            "SourcePath" = "8:..\\iContact\\Windows Mobile 5.0 Pocket PC SDK (ARMV4I)\\Debug\\iContact.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_21556AC0572C490981F786B2356F86D1"
@@ -395,16 +393,6 @@
         }
         "Shortcut"
         {
-            "{971D45E9-E38C-49AC-B36E-4C5BEA533350}:_001A6C0C5F3547A285DBF741D32E176F"
-            {
-            "Name" = "8:iContact"
-            "Arguments" = "8:"
-            "Description" = "8:"
-            "ShowCmd" = "3:1"
-            "Target" = "8:_DC572D43BAA54E648EFA90B71A7C3CB1"
-            "Folder" = "8:_0CD25DE9E9F14600BEAD24EA0CF30D4C"
-            "WorkingFolder" = "8:_21556AC0572C490981F786B2356F86D1"
-            }
             "{971D45E9-E38C-49AC-B36E-4C5BEA533350}:_1877EDB79FBE4058A90FDC32FBAEFA0C"
             {
             "Name" = "8:iContact"

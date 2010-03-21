@@ -1,0 +1,27 @@
+[language]
+alphabet=ABCDEFGHIJKLMNOPQRSTUVWXYZ
+addNewContact=Add new contact
+mobile=Mobile
+home=Home
+work=Work
+company=Company
+email=E-mail
+sms=SMS
+today=Today
+yesterday=Yesterday
+monday=Monday
+tuesday=Tuesday
+wednesday=Wednesday
+thursday=Thursday
+friday=Friday
+saturday=Saturday
+sunday=Sunday
+older=Older
+type=Type
+number=Number
+date=Date
+duration=Duration
+seconds=seconds
+outgoing=Outgoing
+missed=Missed
+incoming=Incoming

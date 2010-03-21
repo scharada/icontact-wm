@@ -1,245 +1,210 @@
-/*******************************************************************
-This file is part of iContact.
-
-iContact is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-iContact is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with iContact.  If not, see <http://www.gnu.org/licenses/>.
-*******************************************************************/
-
 #include "stdafx.h"
 #include "PhoneUtils.h"
-#include "FileUtils.h"
-#include "Macros.h"
 
-#include <pimstore.h>
+#include "windows.h"
+#include "regext.h"
+#include "tapi.h"
+#include "tsp.h"
 
-// dynamically loaded function
-typedef LONG (* TAPIREQUESTMAKECALL)(LPCTSTR, LPCTSTR, LPCTSTR, LPCTSTR);
 
-#define MAX_COMMAND_LINE 200
-#define MAX_LOADSTRING 100
+#define EXIT_ON_NULL(_p) if (_p == NULL) { hr = E_OUTOFMEMORY; goto FuncExit; }
+#define EXIT_ON_FALSE(_f) if (!(_f)) { hr = E_FAIL; goto FuncExit; }
+
+#define TAPI_API_LOW_VERSION   0x00020000
+#define TAPI_API_HIGH_VERSION  0x00020000
+
+#define CAPS_BUFFER_SIZE    512
+
+#define MAX_REG_SZ_CHARS 50
+
+// function prototypes
+HRESULT SHGetPhoneNumber(LPTSTR, UINT, UINT);
+HRESULT SHReadLineAddressCaps(LPTSTR, UINT, PDWORD, UINT);
 
 // main functions
 
-void Call(TCHAR * number, TCHAR * name) {
-    TCHAR szFilename[MAX_PATH];
-    PROCESS_INFORMATION pi;
-    TCHAR szArguments[MAX_PATH];
+void Call(wchar_t * number, wchar_t * name) {
+    PHONEMAKECALLINFO mci = {0};
+    LRESULT lResult;
 
-	HINSTANCE hiCellCoreDll;
-	TAPIREQUESTMAKECALL tapiRequestMakeCall;
-
-    if (GetIDialerFilename(szFilename)) {
-		if (name != NULL && _tcslen(name) > 0)
-	        StringCchPrintf(szArguments, MAX_PATH, TEXT("%s -name=%s"), number, name);
-		else
-			StringCchCopy(szArguments, MAX_PATH, number);
-
-        CreateProcess(szFilename, szArguments,
-            NULL, NULL, FALSE, NULL, NULL, NULL, NULL, &pi);
-    }
-    else {
-		hiCellCoreDll = LoadLibrary(TEXT("cellcore.dll"));
-		if (!hiCellCoreDll) {
-			// TODO: alert user?
-			return;
-		}
-
-		tapiRequestMakeCall = (TAPIREQUESTMAKECALL)GetProcAddress(
-			hiCellCoreDll, TEXT("tapiRequestMakeCallW"));
-
-		if (name != NULL && _tcslen(name) > 0)
-	        tapiRequestMakeCall(number, NULL, name, NULL);
-		else
-			tapiRequestMakeCall(number, NULL, number, NULL);
-    }
+    mci.cbSize = sizeof(mci);
+    mci.dwFlags = 0;
+    //mci.pszDestAddress = tszPhoneNumber;
+    //mci.pszDestAddress = ActionsList[SubListCurrentAction].text;
+    mci.pszDestAddress = number;
+    mci.pszCalledParty = name;
+    lResult = PhoneMakeCall(&mci);
 }
 
-void SendSMS(TCHAR * number, TCHAR * name) {
+void SendSMS(wchar_t * to) {
     PROCESS_INFORMATION pi;
-    TCHAR tszCommandLine[MAX_COMMAND_LINE];
+    wchar_t tszCommandLine[200];
 
-    StringCchPrintf(tszCommandLine, MAX_COMMAND_LINE, 
-        TEXT("-service \"SMS\" -to \"\\\"%s\\\" <%s>\""), name, number);
+    wsprintf(tszCommandLine, L"-service \"SMS\" -to \"%s\"", to);
 
-    CreateProcess(TEXT("tmail.exe"), tszCommandLine, 
+    CreateProcess(L"tmail.exe", tszCommandLine, 
         NULL, NULL, FALSE, NULL, NULL, NULL, NULL, &pi);
 }
 
-void SendEMail(const TCHAR * account, TCHAR * to) {
+void SendEMail(const wchar_t * account, wchar_t * to) {
     PROCESS_INFORMATION pi;
-    TCHAR tszCommandLine[MAX_COMMAND_LINE];
-    TCHAR tszAccountName[MAX_LOADSTRING];
+    wchar_t tszCommandLine[200];
 
-    // If account == "", then get the last used email account name from the phone
-    if (_tcslen(account) > 0) {
-        StringCchPrintf(tszCommandLine, MAX_COMMAND_LINE, 
-            TEXT("-service \"%s\" -to \"%s\""), account, to);
-    }
-    else {
-        // This should be the name of the last used email account
-        GetDefaultEmailAccount(tszAccountName);
+    wsprintf(tszCommandLine, L"-service \"%s\" -to \"%s\"", account, to);
 
-        StringCchPrintf(tszCommandLine, MAX_COMMAND_LINE, 
-            TEXT("-service \"%s\" -to \"%s\""), tszAccountName, to);
-    }
-
-    CreateProcess(TEXT("tmail.exe"), tszCommandLine, 
+    CreateProcess(L"tmail.exe", tszCommandLine, 
         NULL, NULL, FALSE, NULL, NULL, NULL, NULL, &pi);
 }
-
-// http://blogs.msdn.com/windowsmobile/archive/2007/03/21/getting-started-with-mapi.aspx
-void GetDefaultEmailAccount(TCHAR * tszAccountName) {
-    
-    //TODO: figure out why this function behaves badly
-    StringCchPrintf(tszAccountName, MAX_LOADSTRING, TEXT("ActiveSync"));
-    return;
-
-    /*HRESULT hr;
-    IMAPITable * ptbl;
-    IMAPISession * pSession;
-    SRowSet *prowset = NULL;
-    SPropValue *pval = NULL;
-    SizedSPropTagArray (1, spta) = { 1, PR_DISPLAY_NAME };
-    int index = 0;
-   
-    // Log onto MAPI
-    hr = MAPILogonEx(0, NULL, NULL, 0, static_cast<LPMAPISESSION *>(&pSession));
-    CHR(hr); // CHR will goto Error if FAILED(hr)
-   
-    // Get the table of accounts
-    hr = pSession->GetMsgStoresTable(0, &ptbl);
-    CHR(hr);
-   
-    // set the columns of the table we will query
-    hr = ptbl->SetColumns ((SPropTagArray *) &spta, 0);
-    CHR(hr);
-   
-    while (TRUE) {
-        // Free the previous row
-        FreeProws(prowset);
-        prowset = NULL;
- 
-        hr = ptbl->QueryRows(1, 0, &prowset);
-        if ((hr != S_OK) || (prowset == NULL) || (prowset->cRows == 0)) {
-            break;
-        }
- 
-        ASSERT(prowset->aRow[0].cValues == spta.cValues);
-        pval = prowset->aRow[0].lpProps;
- 
-        ASSERT(pval[0].ulPropTag == PR_DISPLAY_NAME);
- 
-        if (0 != _tcscmp(pval[0].Value.lpszW, TEXT("SMS"))) {
-            StringCchCopy(tszAccountName, MAX_LOADSTRING, pval[0].Value.lpszW);
-            break;
-        }
-
-        //MessageBox(NULL, pval[0].Value.lpszW, TEXT("Message Store"), MB_OK);
-    }
-Error:
-    RELEASE_OBJ(ptbl);
-
-    FreeProws(prowset);
-
-    pSession->Logoff(0, 0, 0);
-    RELEASE_OBJ(pSession);
-    */
-}
-
-void OpenURL(const TCHAR * url) {
-    SHELLEXECUTEINFO ShExecInfo = {0};
-
-    ShExecInfo.cbSize = sizeof(SHELLEXECUTEINFO);
-    ShExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
-    ShExecInfo.hwnd = NULL;
-    ShExecInfo.lpVerb = TEXT("open");
-    ShExecInfo.lpFile = url;
-    ShExecInfo.lpParameters = NULL;
-
-    ShExecInfo.lpDirectory = NULL;
-    ShExecInfo.nShow = SW_SHOW;
-    ShExecInfo.hInstApp = NULL; 
-
-    ShellExecuteEx(&ShExecInfo);
-}
-
-// http://groups.google.com/group/Google-Maps-for-mobile/browse_thread/thread/f41fb116f9faf2b/76aa7eb41a734984
-/* TODO: this would be cool! Fix it!
-void OpenGoogleMaps(CEOID ceoid) {
-    PROCESS_INFORMATION pi;
- 
-    TCHAR szGmapsPath[MAX_PATH];
-    TCHAR tszArgs[MAX_COMMAND_LINE];
-
-    GetCurDirFilename(szGmapsPath, TEXT("..\\GoogleMaps\\GoogleMaps.exe"));
-    StringCchPrintf(tszArgs, MAX_COMMAND_LINE, TEXT("-CEOID %u"), ceoid);
-
-    CreateProcess(szGmapsPath, tszArgs,
-        NULL, NULL, FALSE, NULL, NULL, NULL, NULL, &pi);
-}
-*/
 
 void RunDialer() {
     PROCESS_INFORMATION pi;
 
-    TCHAR szDialerPath[MAX_PATH];
+    CreateProcess(L"cprog.exe", L"", 
+        NULL, NULL, FALSE, NULL, NULL, NULL, NULL, &pi);
+}
 
-    if (GetIDialerFilename(szDialerPath)) {
-        CreateProcess(szDialerPath, NULL,
-            NULL, NULL, FALSE, NULL, NULL, NULL, NULL, &pi);
+void CallVmail() {
+    wchar_t szVal[MAX_REG_SZ_CHARS];
+    szVal[0] = '\0';
+
+    HRESULT success;
+
+    success = RegistryGetString(HKEY_CURRENT_USER, 
+        L"Software\\Microsoft\\Vmail", L"PhoneNumber1", szVal,
+        MAX_REG_SZ_CHARS); 
+
+    if (SUCCEEDED(success) && wcslen(szVal) > 5) {
+        Call(szVal, L"Voicemail");
+        return;
     }
 
-    else {
-        CreateProcess(TEXT("cprog.exe"), NULL, 
-            NULL, NULL, FALSE, NULL, NULL, NULL, NULL, &pi);
+    success = RegistryGetString(HKEY_CURRENT_USER, 
+        L"Software\\Microsoft\\Vmail", L"UserProvidedNumber1", szVal,
+        MAX_REG_SZ_CHARS); 
+
+    if (SUCCEEDED(success) && wcslen(szVal) > 5) {
+        Call(szVal, L"Voicemail");
+        return;
+    }
+
+    success = SHGetPhoneNumber(szVal, MAX_REG_SZ_CHARS, 1);
+    if (SUCCEEDED(success)) {
+        Call(szVal, L"Voicemail");
+        return;
     }
 }
 
+// utility functions
+ 
+// http://blogs.msdn.com/windowsmobile/archive/2004/11/28/271110.aspx
+HRESULT SHReadLineAddressCaps(LPTSTR szNumber, UINT cchNumber, PDWORD pdwCallFwdModes, UINT nLineNumber) {
+    HRESULT  hr = E_FAIL;
+    LRESULT  lResult = 0;
+    HLINEAPP hLineApp;
+    DWORD    dwNumDevs;
+    DWORD    dwAPIVersion = TAPI_API_HIGH_VERSION;
+    LINEINITIALIZEEXPARAMS liep;
 
-void AddContactByNumber(TCHAR * pNumber) {
-    HRESULT hr = S_OK;
-    IContact * pContact = NULL;
-    IItem * pItem = NULL;
-    IPOutlookApp2 * polApp;
-	BSTR bstrNumber;
-    HWND hWnd;
+    DWORD dwTAPILineDeviceID;
+    const DWORD dwAddressID = nLineNumber - 1;
 
-    hr = CoCreateInstance(__uuidof(Application), NULL, CLSCTX_INPROC_SERVER,
-                          __uuidof(IPOutlookApp2), (LPVOID*) &polApp);
-    CHR(hr);
+    liep.dwTotalSize = sizeof(liep);
+    liep.dwOptions   = LINEINITIALIZEEXOPTION_USEEVENT;
 
-    hWnd = GetForegroundWindow();
-    hr = polApp->Logon((long)hWnd);
-    CHR(hr);
+    if (SUCCEEDED(lineInitializeEx(&hLineApp, 0, 0, TEXT("ExTapi_Lib"), &dwNumDevs, &dwAPIVersion, &liep))) {
 
-    hr = polApp->CreateItem(olContactItem, (IDispatch**)&pContact);
-    CHR(hr);
+        BYTE* pCapBuf = NULL;
+        DWORD dwCapBufSize = CAPS_BUFFER_SIZE;
+        LINEEXTENSIONID  LineExtensionID;
+        LINEDEVCAPS*     pLineDevCaps = NULL;
+        LINEADDRESSCAPS* placAddressCaps = NULL;
 
-	bstrNumber = ::SysAllocString(pNumber);
-    pContact->put_MobileTelephoneNumber(bstrNumber);
+        pCapBuf = new BYTE[dwCapBufSize];
+        EXIT_ON_NULL(pCapBuf);
 
-    hr = ((IDispatch*)pContact)->QueryInterface(__uuidof(IItem), 
-        (LPVOID*)&pItem);
+        pLineDevCaps = (LINEDEVCAPS*)pCapBuf;
+        pLineDevCaps->dwTotalSize = dwCapBufSize;
 
-    CHR(hr);
+        // Get TSP Line Device ID
+        dwTAPILineDeviceID = 0xffffffff;
+        for (DWORD dwCurrentDevID = 0 ; dwCurrentDevID < dwNumDevs ; dwCurrentDevID++) {
+            if (0 == lineNegotiateAPIVersion(hLineApp, dwCurrentDevID, TAPI_API_LOW_VERSION, TAPI_API_HIGH_VERSION,
+                &dwAPIVersion, &LineExtensionID))
+            {
+                lResult = lineGetDevCaps(hLineApp, dwCurrentDevID, dwAPIVersion, 0, pLineDevCaps);
 
-	hr = pItem->Edit(hWnd);
+                if (dwCapBufSize < pLineDevCaps->dwNeededSize) {
+                    delete[] pCapBuf;
+                    dwCapBufSize = pLineDevCaps->dwNeededSize;
+                    pCapBuf = new BYTE[dwCapBufSize];
+                    EXIT_ON_NULL(pCapBuf);
 
-Error:
-    // cleanup
-    RELEASE_OBJ(pContact);
-    RELEASE_OBJ(polApp);
-	::SysFreeString(bstrNumber);
+                    pLineDevCaps = (LINEDEVCAPS*)pCapBuf;
+                    pLineDevCaps->dwTotalSize = dwCapBufSize;
 
-    return;
+                    lResult = lineGetDevCaps(hLineApp, dwCurrentDevID, dwAPIVersion, 0, pLineDevCaps);
+                }
+
+                if ((0 == lResult) &&
+                    (0 == _tcscmp((TCHAR*)((BYTE*)pLineDevCaps+pLineDevCaps->dwLineNameOffset), CELLTSP_LINENAME_STRING)))
+                {
+                    dwTAPILineDeviceID = dwCurrentDevID;
+                    break;
+                }
+            }
+        }
+
+        placAddressCaps = (LINEADDRESSCAPS*)pCapBuf;
+        placAddressCaps->dwTotalSize = dwCapBufSize;
+
+        lResult = lineGetAddressCaps(hLineApp, dwTAPILineDeviceID, dwAddressID, dwAPIVersion, 0, placAddressCaps);
+
+        if (dwCapBufSize < placAddressCaps->dwNeededSize) {
+            delete[] pCapBuf;
+            dwCapBufSize = placAddressCaps->dwNeededSize;
+            pCapBuf = new BYTE[dwCapBufSize];
+            EXIT_ON_NULL(pCapBuf);
+
+            placAddressCaps = (LINEADDRESSCAPS*)pCapBuf;
+            placAddressCaps->dwTotalSize = dwCapBufSize;
+
+            lResult = lineGetAddressCaps(hLineApp, dwTAPILineDeviceID, dwAddressID, dwAPIVersion, 0, placAddressCaps);
+        }
+
+        if (0 == lResult) {
+            if (szNumber) {
+                szNumber[0] = _T('\0');
+
+                EXIT_ON_FALSE(0 != placAddressCaps->dwAddressSize);
+
+                // A non-zero dwAddressSize means a phone number was found
+                ASSERT(0 != placAddressCaps->dwAddressOffset);
+                PWCHAR tsAddress = (WCHAR*)(((BYTE*)placAddressCaps)+placAddressCaps->dwAddressOffset);
+
+                StringCchCopy(szNumber, cchNumber, tsAddress);
+            }
+
+            // Record the allowed forwarding modes
+            if (pdwCallFwdModes)
+            {
+                *pdwCallFwdModes = placAddressCaps->dwForwardModes;
+            }
+
+            hr = S_OK;
+        }
+
+        delete[] pCapBuf;
+    } // End if ()
+
+FuncExit:
+    lineShutdown(hLineApp);
+
+    return hr;
+}
+
+// szNumber - Out Buffer for the phone number
+// cchNumber - size of sznumber in characters
+// nLineNumber - which phone line (1 or 2) to get the number for
+HRESULT SHGetPhoneNumber(LPTSTR szNumber, UINT cchNumber, UINT nLineNumber) {
+    return SHReadLineAddressCaps(szNumber, cchNumber, NULL, nLineNumber);
 }

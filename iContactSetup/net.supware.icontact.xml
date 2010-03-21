@@ -1,0 +1,34 @@
+<application>
+  <name>iContact</name>
+  <version>0.72</version>
+  <description>
+    <![CDATA[<b>iContact</b><br />A new implementation of iContact by supbro building on the source code release by Larna, with aditional features including Full screen, and a top bar based on A_Cs S2 series.
+  <br />
+  <br />
+  Check http://www.supware.net/iContact for more info!
+  <br />
+  <br />
+  <b>Release Notes:</b><br/><br />
+  <b>0.72</b> - June 9, 2008
+  <ul>
+    <li>Restored scroll bar for logs &amp; favorites</li>
+    <li>Sped up display of favorites list</li>
+    <li>Updated icons to look more iPhone-like</li>
+    <li>Added better support for different screen sizes</li>
+    <li>Added more skin settings</li>
+    <li>Added more language strings</li>
+	  <li>Added "alphabet" support for keyboard</li>
+    <li>Separated language from skin settings</li>
+    <li>Fixed start menu location for non-english</li>
+    <li>Fixed "gt;500" bug</li>
+    <li>Reduced memory footprint (for those with fewer contacts)</li>
+    <li>Optimized keyboard drawing routine *a little bit*</li>
+    <li>Changed animation effect for details screen</li>
+    <li>Fixed edit contact to go directly to edit screen</li>
+    <li>Fixed Favorites toggle to not delete other categories</li>
+    <li>Added Home2 and Work2 telephone numbers to details</li>
+  </ul>]]>
+  </description>
+  <versionurl>http://www.supware.net/iContact/net.supware.icontact.xml</versionurl>
+  <caburl>http://www.supware.net/iContact/iContact.cab</caburl>
+</application>

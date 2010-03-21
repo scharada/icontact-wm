@@ -1,98 +1,34 @@
-/*******************************************************************
-This file is part of iContact.
+//{{NO_DEPENDENCIES}}
+// Microsoft Visual C++ generated include file.
+// Used by iContactppc.rc
+//
 
-iContact is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+#define IDS_APP_TITLE			1
+#define IDC_ICONTACT	2
+#define IDI_ICONTACT	101
+#define IDR_MENU			102
+#define IDS_OK                          103
+#define IDS_HELP			104
+#define IDD_ABOUTBOX			105
+#define IDD_ABOUTBOX_WIDE		106
+#define IDC_STATIC_1			201
+#define IDC_STATIC_2			202
+#define IDC_STATIC_3			203
+#define IDM_OK				40000
+#define IDM_HELP			40001
+#define IDM_HELP_ABOUT			40002
+#ifndef IDC_STATIC
+#define IDC_STATIC			-1
+#endif
 
-iContact is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with iContact.  If not, see <http://www.gnu.org/licenses/>.
-*******************************************************************/
-
-#pragma once
-
-#include "CSettings.h"
-
-#define SZ_APP_NAME             TEXT("iContact")
-
-#define IDI_ICONTACT	        101
-
-#define PRIMARY_TEXT_LENGTH     64
-#define SECONDARY_TEXT_LENGTH   16
-
-#define NEWSCREEN_BACK -1
-#define NEWSCREEN_EXIT -2
-#define NEWSCREEN_BACK_ON_DEACTIVATE -3
-
-enum DataItemType {
-    diNothing, diListItem, diText, diUrl,
-    diName, diCompany, diPhone, diEmail,
-    diDetailsButton, diEditButton, diCallButton, 
-    diSmsButton, diSaveContactButton, 
-    diCreateShortcutButton, diRemoveShortcutButton,
-};
-
-/// List DATA
-struct DataItem {
-	int		        ID;
-	LONG    	    oId;
-	DataItemType    type;
-	TCHAR           szPrimaryText[PRIMARY_TEXT_LENGTH];
-	TCHAR		    szSecondaryText[SECONDARY_TEXT_LENGTH];
-    UINT            iGroup;
-    bool            isFavorite;
-    bool            isMissed;
-};
-
-struct ScreenDefinition {
-    TCHAR * filename;
-    int parent;
-    bool hasMenus;
-    HRESULT (*fnPopulate)(DataItem * parent, void (*adder)(DataItem*),
-        CSettings * pSettings);
-    HRESULT (*fnGetTitle)(DataItem * parent, TCHAR * buffer, int cchDest,
-        CSettings * pSettings);
-    HRESULT (*fnGetGroup)(DataItem * data, TCHAR * buffer, int cchDest,
-        CSettings * pSettings);
-    HRESULT (*fnClick)(DataItem * data, float x, int * newScreen,
-        CSettings * pSettings);
-    HRESULT (*fnAdd)(void);
-    HRESULT (*fnToggleFavorite)(DataItem * data, CSettings * pSettings);
-    HRESULT (*fnGetHBitmap)(DataItem * data, HBITMAP * phBitmap, 
-                              UINT * puWidth, UINT * puHeight);
-};
-
-struct CmdLineArg {
-    TCHAR * arg;
-    WPARAM wparam;
-};
-
-enum TransitionType {
-    ttSlideLeft,
-    ttSlideRight,
-    ttKeyboardExpand,
-    ttKeyboardShrink,
-};
-
-enum PopupType {
-    ptKeyboard,
-};
-
-struct decodeUINT {                             // Structure associates
-    UINT Code;                                  // messages 
-                                                // with a function. 
-    LRESULT (*Fxn)(HWND, UINT, WPARAM, LPARAM);
-};
-
-struct HistoryItem {
-    int screen;
-    int scrolled;
-    int selectedIndex;
-    DataItem data;
-};
+// Next default values for new objects
+// 
+#ifdef APSTUDIO_INVOKED
+#ifndef APSTUDIO_READONLY_SYMBOLS
+#define _APS_NO_MFC			130
+#define _APS_NEXT_RESOURCE_VALUE	129
+#define _APS_NEXT_COMMAND_VALUE		32771
+#define _APS_NEXT_CONTROL_VALUE		1000
+#define _APS_NEXT_SYMED_VALUE		110
+#endif
+#endif
