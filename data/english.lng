@@ -1,7 +1,7 @@
 ;iContact English language file
 ;by Doug Melton - support@supware.net
 
-favorites=Favorites
+[language]
 alphabet=ABCDEFGHIJKLMNOPQRSTUVWXYZ
 mobile=Mobile
 home=Home
@@ -16,13 +16,13 @@ email=E-mail
 sms=SMS
 today=Today
 yesterday=Yesterday
-sunday=Sunday
 monday=Monday
 tuesday=Tuesday
 wednesday=Wednesday
 thursday=Thursday
 friday=Friday
 saturday=Saturday
+sunday=Sunday
 older=Older
 date=Date
 duration=Duration
@@ -39,5 +39,3 @@ recents=Recents
 allcontacts=All Contacts
 details=Details
 categories=Categories
-createshortcut=Create Shortcut
-removeshortcut=Remove Shortcut

@@ -55,17 +55,14 @@ bool GetIDialerFilename(TCHAR * szFilename) {
     // Concatenate iDialer exe path
 	StringCchCat(szFilename, MAX_PATH, TEXT("\\iDialer.exe"));
 
-    return FileExists(szFilename);
-}
-
-bool FileExists(const TCHAR * szFilename) {
     // test if file exists
     HANDLE h = CreateFile(szFilename, GENERIC_READ,
         FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, NULL, NULL);
     bool exists = h != INVALID_HANDLE_VALUE;
     if (exists)
         CloseHandle(h);
-	return exists;
+
+    return exists;
 }
 
 void GetCurDirFilename(TCHAR * szFilename, const TCHAR * filename, 

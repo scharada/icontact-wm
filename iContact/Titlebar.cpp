@@ -1,5 +1,5 @@
 /*******************************************************************
-This file is part of iContact.
+This file is part of iDialer.
 
 iContact is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Titlebar.h"
 
-int nBattery; //0-34
+int nBattery; //0-17
 int nBars; //0-5
 TCHAR szCarrier[50];
 TCHAR szTime[12];
@@ -118,7 +118,7 @@ void RefreshTitlebar(UINT uWhich) {
     StringCchPrintf(szTime, 12, TEXT("12:38 PM"));
     StringCchPrintf(szCarrier, 50, TEXT("AT&T"));
     nBars = 3;
-    nBattery = 19;
+    nBattery = 10;
     bVibrate = false;
     bSpeakerOn = true;
     bBluetooth = true;
@@ -155,15 +155,17 @@ void RefreshTitlebar(UINT uWhich) {
     }
 
     // Battery level & charging state
+    // http://msdn.microsoft.com/en-us/library/aa456240.aspx
     if (uWhich & TB_BATTERY_MASK) {
-        SYSTEM_POWER_STATUS_EX2 sps = {0};
-        DWORD result = GetSystemPowerStatusEx2(&sps,
-            sizeof(SYSTEM_POWER_STATUS_EX2), false);
-
-        if (result > 0) {
-            //nBattery = 0-34
-            nBattery = min(34, MulDiv(sps.BatteryLifePercent, 34, 100));
-            bCharging = (sps.BatteryFlag & BATTERY_FLAG_CHARGING) > 0;
+        hr = RegistryGetDWORD(
+            SN_POWERBATTERYSTRENGTH_ROOT, 
+            SN_POWERBATTERYSTRENGTH_PATH, 
+            SN_POWERBATTERYSTRENGTH_VALUE,
+            &dw);
+        if (SUCCEEDED(hr)) {
+            nBattery = (dw & SN_POWERBATTERYSTRENGTH_BITMASK) >> 16;
+            nBattery = (int)(nBattery * 0.21 + 0.5);
+            bCharging = (dw & BATTERY_STATE_CHARGING) != 0;
         }
     }
 
@@ -234,32 +236,33 @@ void DrawTitlebarOn(HDC hdc, RECT rTitlebar, HDC hdcSkin,
     RECT rc = {0};
     HGDIOBJ hOld;
 
-    int rTitlebarHeight = rTitlebar.bottom - rTitlebar.top;
-    int scale = rTitlebarHeight / TITLE_BAR_HEIGHT;
-
-	SetTextColor(hdc, GetPixel(hdcSkin, FOREGROUND_X_OFFSET * scale, 0));
+	SetTextColor(hdc, GetPixel(hdcSkin, FOREGROUND_X_OFFSET, 0));
     SetBkMode(hdc, TRANSPARENT);
 
     hOld = SelectObject(hdc, hfTitleFont);
 
+    int rTitlebarHeight = rTitlebar.bottom - rTitlebar.top;
+    int scale = rTitlebarHeight / TITLE_BAR_HEIGHT;
+
     // Fill in background, stretch the last column across
     StretchBlt(hdc, rTitlebar.left, rTitlebar.top, 
         rTitlebar.right - rTitlebar.left, rTitlebarHeight,
-        hdcSkin, BACKGROUND_X_OFFSET * scale, 0, 
-		BACKGROUND_WIDTH * scale, TITLE_BAR_HEIGHT * scale,
+        hdcSkin, BACKGROUND_X_OFFSET, 0, BACKGROUND_WIDTH, TITLE_BAR_HEIGHT, 
         SRCCOPY);
 
     // LEFT SIDE
     // "Filled" Bars
     int w = nBars * SIGNAL_WIDTH / 5;
-    BitBlt(hdc, rTitlebar.left, rTitlebar.top,
-        w * scale, rTitlebarHeight, hdcSkin,
-		SIGNAL_X_OFFSET * scale, 0, SRCCOPY);
+    StretchBlt(hdc, rTitlebar.left, rTitlebar.top,
+        w * scale, rTitlebarHeight, 
+        hdcSkin, SIGNAL_X_OFFSET, 0, w, TITLE_BAR_HEIGHT,
+        SRCCOPY);
 
     // "Empty" Bars
-    BitBlt(hdc, rTitlebar.left + w * scale, rTitlebar.top,
+    StretchBlt(hdc, rTitlebar.left + w * scale, rTitlebar.top,
         (SIGNAL_WIDTH - w) * scale, rTitlebarHeight,
-        hdcSkin, (SIGNAL_OFF_X_OFFSET + w) * scale, 0, SRCCOPY);
+        hdcSkin, SIGNAL_OFF_X_OFFSET + w, 0, SIGNAL_WIDTH - w, 
+        TITLE_BAR_HEIGHT, SRCCOPY);
 
     // Carrier (or tszTitle if it exists)
     rc.top = (rTitlebar.top + 1) * scale;
@@ -280,64 +283,65 @@ void DrawTitlebarOn(HDC hdc, RECT rTitlebar, HDC hdcSkin,
     int y = rTitlebar.top;
 
     // copy the whole battery section of the skin
-    BitBlt(hdc, x, y, BATTERY_WIDTH * scale, rTitlebarHeight, 
-        hdcSkin, BATTERY_X_OFFSET * scale, 0, SRCCOPY);
+    StretchBlt(hdc, x, y, BATTERY_WIDTH * scale, rTitlebarHeight, 
+        hdcSkin, BATTERY_X_OFFSET, 0, BATTERY_WIDTH, TITLE_BAR_HEIGHT, SRCCOPY);
 
     // copy the "empty" section of the battery
-    StretchBlt(hdc, x + scale, y, 
-		(BATTERY_WIDTH - 4) * scale, rTitlebarHeight,
-        hdcSkin, (BATTERY_X_OFFSET + 17) * scale, 0,
-		1, TITLE_BAR_HEIGHT * scale, SRCCOPY);
+    StretchBlt(hdc, x + scale, y, (BATTERY_WIDTH - 4) * scale, rTitlebarHeight,
+        hdcSkin, BATTERY_X_OFFSET + 17, 0, 1, TITLE_BAR_HEIGHT, SRCCOPY);
 
     // copy the "full" section of the battery
     if (nBattery) {
+        rc.top = 5 * scale;
+        rc.bottom = rc.top + 6 * scale;
+        rc.left = x + 3 * scale;
+        rc.right = rc.left + nBattery * scale;
         StretchBlt(hdc, rTitlebar.right - (BATTERY_WIDTH - 1) * scale, y,
-            nBattery * scale / 2, rTitlebarHeight,
-            hdcSkin, (BATTERY_X_OFFSET + 1) * scale, 0,
-			1, TITLE_BAR_HEIGHT * scale, SRCCOPY);
+            nBattery * scale, rTitlebarHeight,
+            hdcSkin, BATTERY_X_OFFSET + 1, 0, 1, TITLE_BAR_HEIGHT, SRCCOPY);
     }
 
     // Speaker
     if (bVibrate) {
         x -= (VIBRATE_WIDTH + TITLE_BAR_ICON_SPACING) * scale;
-        BitBlt(hdc, x, y, VIBRATE_WIDTH * scale, rTitlebarHeight, 
-            hdcSkin, VIBRATE_X_OFFSET * scale, 0, SRCCOPY);
+        StretchBlt(hdc, x, y, VIBRATE_WIDTH * scale, rTitlebarHeight, 
+            hdcSkin, VIBRATE_X_OFFSET, 0, VIBRATE_WIDTH, TITLE_BAR_HEIGHT, SRCCOPY);
     }
     else if (bSpeakerOn) {
         x -= (SPEAKER_ON_WIDTH + TITLE_BAR_ICON_SPACING) * scale;
-        BitBlt(hdc, x, y, SPEAKER_ON_WIDTH * scale, rTitlebarHeight, 
-            hdcSkin, SPEAKER_ON_X_OFFSET * scale, 0, SRCCOPY);
+        StretchBlt(hdc, x, y, SPEAKER_ON_WIDTH * scale, rTitlebarHeight, 
+            hdcSkin, SPEAKER_ON_X_OFFSET, 0, SPEAKER_ON_WIDTH, TITLE_BAR_HEIGHT, SRCCOPY);
     }
     else {
         x -= (SPEAKER_OFF_WIDTH + TITLE_BAR_ICON_SPACING) * scale;
-        BitBlt(hdc, x, y, SPEAKER_OFF_WIDTH * scale, rTitlebarHeight, 
-            hdcSkin, SPEAKER_OFF_X_OFFSET * scale, 0, SRCCOPY);
+        StretchBlt(hdc, x, y, SPEAKER_OFF_WIDTH * scale, rTitlebarHeight, 
+            hdcSkin, SPEAKER_OFF_X_OFFSET, 0, SPEAKER_OFF_WIDTH, TITLE_BAR_HEIGHT, SRCCOPY);
     }
 
     // Bluetooth
     if (bBluetooth) {
         x -= (BLUETOOTH_WIDTH + TITLE_BAR_ICON_SPACING) * scale;
-        BitBlt(hdc, x, y, BLUETOOTH_WIDTH * scale, rTitlebarHeight, 
-            hdcSkin, BLUETOOTH_X_OFFSET * scale, 0, SRCCOPY);
+        StretchBlt(hdc, x, y, BLUETOOTH_WIDTH * scale, rTitlebarHeight, 
+            hdcSkin, BLUETOOTH_X_OFFSET, 0, BLUETOOTH_WIDTH, TITLE_BAR_HEIGHT, SRCCOPY);
     }
     if (bA2dp) {
         x -= (A2DP_WIDTH + TITLE_BAR_ICON_SPACING) * scale;
-        BitBlt(hdc, x, y, A2DP_WIDTH * scale, rTitlebarHeight, 
-            hdcSkin, A2DP_X_OFFSET * scale, 0, SRCCOPY);
+        StretchBlt(hdc, x, y, A2DP_WIDTH * scale, rTitlebarHeight, 
+            hdcSkin, A2DP_X_OFFSET, 0, A2DP_WIDTH, TITLE_BAR_HEIGHT, SRCCOPY);
     }
 
     // WiFi Connection
     if (bWifi) {
         x -= (WIFI_WIDTH + TITLE_BAR_ICON_SPACING) * scale;
-        BitBlt(hdc, x, y, WIFI_WIDTH * scale, rTitlebarHeight, 
-            hdcSkin, WIFI_X_OFFSET * scale, 0, SRCCOPY);
+        StretchBlt(hdc, x, y, WIFI_WIDTH * scale, rTitlebarHeight, 
+            hdcSkin, WIFI_X_OFFSET, 0, WIFI_WIDTH, TITLE_BAR_HEIGHT, SRCCOPY);
     }
 
     // Data Connection
     if (bConnection) {
         x -= (CONNECTION_WIDTH + TITLE_BAR_ICON_SPACING) * scale;
-        BitBlt(hdc, x, y, CONNECTION_WIDTH * scale, rTitlebarHeight, 
-            hdcSkin, CONNECTION_X_OFFSET * scale, 0, SRCCOPY);
+        StretchBlt(hdc, x, y, CONNECTION_WIDTH * scale, rTitlebarHeight, 
+            hdcSkin, CONNECTION_X_OFFSET, 0, CONNECTION_WIDTH, TITLE_BAR_HEIGHT, SRCCOPY);
     }
 
     //cleanup

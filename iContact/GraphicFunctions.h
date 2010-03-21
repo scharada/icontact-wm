@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************/
 
-#include "stdafx.h"
+#include "macros.h"
 #include <imaging.h>
 
 HFONT BuildFont(int, BOOL, BOOL);
@@ -29,5 +29,3 @@ HBITMAP HBITMAPFromImage (IN IImage * pImage, IN COLORREF crBackColor);
 HRESULT GetBitmapFromStream(IStream* pStream, HBITMAP* phBitmap, 
     UINT* puWidth, UINT* puHeight);
 void DrawRect(HDC hdc, LPRECT prc, COLORREF clr);
-HRESULT SavePNG(HDC hDC, HBITMAP hBitmap, const TCHAR* szPath, 
-				IImagingFactory * pFactory);

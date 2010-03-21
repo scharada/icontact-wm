@@ -16,6 +16,5 @@ along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************/
 
 bool GetIDialerFilename(TCHAR * szFilename);
-bool FileExists(const TCHAR * szFilename);
 void GetCurDirFilename(TCHAR * szFilename, const TCHAR * filename, 
                        const TCHAR * extension = NULL);

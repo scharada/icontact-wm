@@ -53,12 +53,13 @@ enum PopupType {
 };
 
 #define SZ_APP_NAME                 TEXT("iContact Settings")
+#define ABOUT_LENGTH                27
 #define MAX_LIST_ITEMS              50
 
 #define SZ_DOWNLOAD_SKINS           TEXT("download more skins...")
-#define URL_DOWNLOAD_SKINS          TEXT("http://supware.net/iContact/skins/?app=1")
+#define URL_DOWNLOAD_SKINS          TEXT("http://supware.net/iContact/skins")
 #define SZ_DOWNLOAD_LANGUAGES       TEXT("download more languages...")
-#define URL_DOWNLOAD_LANGUAGES      TEXT("http://supware.net/iContact/language/?app=1")
+#define URL_DOWNLOAD_LANGUAGES      TEXT("http://supware.net/iContact/language")
 
 #define SZ_ON                       TEXT("ON")
 #define SZ_OFF                      TEXT("OFF")
@@ -75,9 +76,27 @@ enum PopupType {
 #define TRANSITION_PERIOD           300
 #define EXPAND_PERIOD               300
 #define CONTRACT_PERIOD             200
+#define ALPHABET_MAX_SIZE           128
 
 #define	REFRESH_RATE                11
 #define FRICTION_COEFF              0.001
+
+// Sizes of skin elements
+#define SKIN_HEADER_HEIGHT          24
+#define SKIN_HEADER_Y_OFFSET        16
+#define SKIN_MENU_BAR_HEIGHT        40
+#define SKIN_MENU_BAR_Y_OFFSET      40
+#define SKIN_MENU_BAR_SEL_Y_OFFSET  80
+#define SKIN_MENU_BAR_ICON_WIDTH    48
+#define SKIN_CANVAS_HEIGHT          4
+#define SKIN_CANVAS_Y_OFFSET        120
+#define SKIN_WIDTH                  240
+
+// These sizes are for screens of 96 DPI only
+// For 192 DPI, these will be adjusted
+#define SKIN_DPI                 96
+
+#define TITLEBAR_HEIGHT             16
 
 #define DEFAULT_ITEM_HEIGHT			36
 #define DEFAULT_GROUP_HEIGHT        17
@@ -89,19 +108,16 @@ enum PopupType {
 #define TITLEBAR_FONT_SIZE          13
 #define	ITEM_FONT_SIZE              20
 #define	ITEM_SECONDARY_FONT_SIZE    12
+#define	KEYBOARD_FONT_SIZE          40
+#define	ITEM_DETAILS_FONT_SIZE      12
+#define ITEM_DETAILS_PICTURE_SIZE   64
+#define ITEM_DETAILS_PADDING        10
+#define	GROUP_ITEM_FONT_SIZE        13
+#define	LIST_INDICATOR_FONT_SIZE    50
 
 #define	LIST_ITEM_INDENT            8
+#define	LIST_GROUP_ITEM_INDENT      14
 #define	LIST_SEPARATOR_HEIGHT       1
-
-
-//----------------------------------------------------------------------
-// EDB constants
-//
-#define DB_VOL_FN TEXT("pim.vol")
-#define CATEGORY_DB_NAME TEXT("CategoryMainDB")
-
-#define MAKEPROP(n,t)    ((n<<16)|CEVT_##t)
-#define PROPID_CAT_NAME		MAKEPROP(0x02, LPWSTR)
 
 
 //----------------------------------------------------------------------
@@ -127,14 +143,8 @@ LRESULT DoDestroyMain(HWND, UINT, WPARAM, LPARAM);
 
 void InitSurface(HWND);
 
-COLORREF GetSkinRGB(int index);
-void InitializeSkin(HDC hdc);
-void InitializeCanvas();
-
-void DrawCanvasOn(HDC hdc, RECT rect);
-void DrawScreenOn(HDC, RECT);
-void DrawListDetailsOn(HDC hdc, RECT rect, RECT rClip, const TCHAR * value);
-void DrawRect(HDC hdc, LPRECT prc, COLORREF clr);
+void DrawScreenOn(HDC, HDC, RECT);
+void DrawListDetailsOn(HDC hdc, RECT rItem, const TCHAR * value);
 
 void ScrollBar(int);
 void ScrollTo (HWND, int, int = SCROLL_TO_PERIOD);

@@ -29,24 +29,25 @@ along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 // Registry defines and data types
 //
 
-#define MISSED_CALL_COUNT_REG_KEY   TEXT("System\\State\\Phone")
-#define MISSED_CALL_COUNT_NAME      TEXT("Missed Call Count")
+#define SZ_IDIALER_REG_KEY          TEXT("Software\\Supware.net\\iDialer")
+#define SERVICE_NUM                 TEXT("service")
+#define SERVICE_TITLE_FORMAT        TEXT("service%dtitle")
+#define SERVICE_TYPE_FORMAT         TEXT("service%dtype")
 
 //----------------------------------------------------------------------
 // Window Message defines and data types
 //
 
 #define WM_SETTINGS_TAINTED         WM_APP + 2
+#define WM_RECENTS_TAINTED          WM_APP + 3
 
-#define SETTINGS_TAINTED_SKIN		0x02
-#define SETTINGS_TAINTED_LANGUAGE	0x04
+#define SETTINGS_TAINTED_IDIALER    0x01
 
 #define CMD_GOTO_FAVORITES          0x01
 #define CMD_GOTO_RECENTS            0x02
 #define CMD_GOTO_CONTACTS           0x03
 #define CMD_GOTO_DIALER             0x04
 #define CMD_GOTO_SEARCH             0x05
-#define CMD_GOTO_DETAILS            0x06
 #define CMD_SWITCH_TAB              0x10
 #define CMD_RELOAD                  0x11
 #define CMD_REFRESH                 0x12
@@ -56,7 +57,7 @@ along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 #define CMD_FORWARD                 0x16
 #define CMD_ADD                     0x17
 #define CMD_FAVORITE                0x18
-#define CMD_JUMP_TO                 0x19
+#define CMD_CHANGE_SERVICE          0x30
 #define CMD_GREEN_BUTTON            0x100
 #define CMD_RED_BUTTON              0x101
 
@@ -82,11 +83,30 @@ along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 
 #define	REFRESH_RATE                11
 #define FRICTION_COEFF              0.001
-#define SPRING_CONSTANT				0.0002
+
+//----------------------------------------------------------------------
+// Skin defines and data types
+//
+
+#define SKIN_HEADER_HEIGHT          24
+#define SKIN_HEADER_Y_OFFSET        16
+#define SKIN_MENU_BAR_HEIGHT        40
+#define SKIN_MENU_BAR_Y_OFFSET      40
+#define SKIN_MENU_BAR_SEL_Y_OFFSET  80
+#define SKIN_MENU_BAR_ICON_WIDTH    48
+#define SKIN_CANVAS_HEIGHT          4
+#define SKIN_CANVAS_Y_OFFSET        120
+#define SKIN_WIDTH                  240
+
+// These sizes are for screens of 96 DPI only
+// For 192 DPI, these will be adjusted
+#define SKIN_DPI                 96
 
 //----------------------------------------------------------------------
 // Graphics defines and data types
 //
+
+#define TITLEBAR_HEIGHT             16
 
 #define DEFAULT_ITEM_HEIGHT			36
 #define DEFAULT_GROUP_HEIGHT        17
@@ -134,8 +154,6 @@ LRESULT DoTimer(HWND, UINT, WPARAM, LPARAM);
 LRESULT DoKeyDown(HWND, UINT, WPARAM, LPARAM);
 LRESULT DoCommand(HWND, UINT, WPARAM, LPARAM);
 LRESULT DoDestroyMain(HWND, UINT, WPARAM, LPARAM);
-LRESULT DoTouchCallback(HWND, UINT, WPARAM, LPARAM);
-LRESULT DoGestureCallback(HWND, UINT, WPARAM, LPARAM);
 
 void InitSurface(HWND);
 
@@ -143,24 +161,21 @@ void DrawScreenOn(HDC, RECT, HDC, int);
 void DrawContentOn(HDC, RECT, HDC, int);
 void DrawMenubarOn(HDC);
 void DrawGroupHeaderOn(HDC, DataItem, RECT);
-void DrawItemBackgroundOn(HDC hdc, DataItemType diType, RECT rect, RECT rClip);
+void DrawItemBackgroundOn(HDC hdc, DataItemType diType, RECT rect);
 void DrawItemDetailsOn(HDC, DataItem, int);
 void DrawItemHoverOn(HDC, DataItem, RECT);
 void DrawItemOn(HDC, DataItem, RECT);
 void DrawKeyboardOn(HDC, RECT);
 void DrawHeaderOn(HDC, RECT, HDC);
-void DrawCanvasOn(HDC hdc, RECT rect);
-
-COLORREF GetSkinRGB(int index);
-void InitializeSkin(HDC hdc);
-void InitializeCanvas();
 
 void CalculateHeights();
-int GetStartPosition(int nItem);
-int GetItemHeight(int nItem);
 int GetPixelToItem(int);
 void ScrollBar(int);
 void ScrollTo (HWND, int, int = SCROLL_TO_PERIOD);
 void StartTransition(HWND, TransitionType, int = TRANSITION_PERIOD);
-bool ParseCommandLine(HWND, LPTSTR);
+void ParseCommandLine(HWND, LPTSTR);
 void CalculateClickRegion(POINT p);
+
+void GetIDialerServiceName();
+void NextIDialerService();
+bool HasMultipleIDialerServices();

@@ -15,9 +15,7 @@ You should have received a copy of the GNU General Public License
 along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************/
 
-#include <windows.h>
-#include <vector>
-
+#include <stdafx.h>
 #include "iContact.h"
 #include "ListData.h"
 #include "PhoneUtils.h"
@@ -25,7 +23,9 @@ along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 #include "Macros.h"
 
 TCHAR szListCacheFn[MAX_PATH];
-std::vector<DataItem> vListItems;
+HANDLE hListItems = NULL;
+DataItem * pListItems = NULL;
+int listLength = 0;
 int listSelectedIndex = -1;
 
 HANDLE hCache = NULL;
@@ -47,7 +47,14 @@ void addDataItem(DataItem * data);
 void writeDataItem(DataItem * data);
 
 void ListClear(void) {
-    vListItems.clear();
+    // Create a seperate heap for ListItems
+    if (hListItems == NULL) {
+        hListItems = HeapCreate(NULL, 0, 0);
+    }
+    if (pListItems != NULL) {
+        HeapFree(hListItems, NULL, pListItems);
+        pListItems = NULL;
+    }
 
     BOOL result = true;
     if (listHBitmap)
@@ -55,6 +62,7 @@ void ListClear(void) {
     listHBitmap = NULL;
     listNBitmapHeight = 0;
     listNBitmapWidth = 0;
+    listLength = 0;
     listSelectedIndex = -1;
 }
 
@@ -69,13 +77,18 @@ HRESULT ListLoad(DataItem * parent, ScreenDefinition screen,
     // this list won't be cached
     else {
         ListClear();
+        int fixedListSize = 32; //TODO: dynamic?
+        pListItems = (DataItem *)HeapAlloc(hListItems, NULL,
+            fixedListSize * sizeof(DataItem));
+        
         ASSERT(screen.fnPopulate != NULL);
+
         return screen.fnPopulate(parent, addDataItem, pSettings);
     }
 }
 
 void addDataItem(DataItem * data) {
-    vListItems.push_back(*data);
+    memcpy(&pListItems[listLength++], data, sizeof(DataItem));
 }
 
 void writeDataItem(DataItem * data) {
@@ -107,13 +120,15 @@ HRESULT listLoadFromCache(DataItem * parent, ScreenDefinition screen,
     DWORD dwFileSize = GetFileSize(hCache, NULL);
 
     ListClear();
+    listLength = dwFileSize / sizeof(DataItem);
+    pListItems = (DataItem *)HeapAlloc(hListItems, NULL,
+        listLength * sizeof(DataItem));
+
     DWORD dwBytesRead;
     SetFilePointer(hCache, 0, NULL, FILE_BEGIN);
-    DataItem data;
-    while (ReadFile(hCache, &data, sizeof(DataItem), &dwBytesRead, NULL)) {
-        CBR(dwBytesRead == sizeof(DataItem));
-        vListItems.push_back(data);
-    }
+    ReadFile(hCache, pListItems, dwFileSize, &dwBytesRead, NULL);
+    CBR(dwBytesRead == dwFileSize);
+    listLength = dwBytesRead / sizeof(DataItem);
 
     hr = S_OK;
 
@@ -146,7 +161,7 @@ Error:
 }
 
 int GetItemCount(void) {
-    return vListItems.size();
+    return listLength;
 }
 
 DataItem GetCurrentItem(void) {
@@ -154,15 +169,15 @@ DataItem GetCurrentItem(void) {
 }
 
 DataItem GetItem(int index) {
-    ASSERT(index >= 0 && index < (int)vListItems.size());
-    return vListItems[index];
+    ASSERT(index > -1 && index < listLength);
+    return pListItems[index];
 }
 
 bool CanSelectItem(int index) {
-	if (index < 0 || index >= (int)vListItems.size())
+	if (index < 0 || index >= listLength)
 		return false;
 
-    int t = vListItems[index].type;
+    int t = pListItems[index].type;
     return t == diListItem
         || t == diUrl
         || t == diPhone
@@ -171,9 +186,7 @@ bool CanSelectItem(int index) {
         || t == diEditButton
         || t == diCallButton
         || t == diSmsButton
-        || t == diSaveContactButton
-        || t == diCreateShortcutButton
-		|| t == diRemoveShortcutButton;
+        || t == diSaveContactButton;
 }
 
 DataItem SelectItem(int index) {
@@ -181,34 +194,10 @@ DataItem SelectItem(int index) {
     return GetCurrentItem();
 }
 
-int SelectFirstItem() {
-	int index = 0;
-    while (index < (int)vListItems.size() && !CanSelectItem(index))
-        index++;
-
-	// Select nothing (-1) if nothing can be selected
-	listSelectedIndex = index < (int)vListItems.size() ? index : -1;
-
-	return listSelectedIndex;
-}
-
-int SelectLastItem() {
-	int index = vListItems.size();
-    while (index >= 0 && !CanSelectItem(index))
-        index--;
-
-	// index will be -1 if nothing available; that's what we want.
-	// -1 means select nothing.
-	listSelectedIndex = index;
-
-	return listSelectedIndex;
-}
-
 int SelectPreviousItem(int defaultIndex, bool byGroup) {
 
-    int index 
-		= listSelectedIndex == 0 ? 0
-		: listSelectedIndex > 0 ? listSelectedIndex - 1
+    int index = listSelectedIndex > 0 
+        ? listSelectedIndex - 1
         : defaultIndex;
     
     while (
@@ -227,13 +216,12 @@ int SelectPreviousItem(int defaultIndex, bool byGroup) {
 
 int SelectNextItem(int defaultIndex, bool byGroup) {
 
-    int index 
-		= listSelectedIndex == vListItems.size() - 1 ? vListItems.size() - 1
-		: listSelectedIndex >= 0 ? listSelectedIndex + 1
+    int index = listSelectedIndex >= 0 
+        ? listSelectedIndex + 1
         : defaultIndex;
     
     while (
-        index < (int)vListItems.size() 
+        index < listLength 
         && (
                (byGroup && !IsItemNewGroup(index))
             || !CanSelectItem(index)
@@ -241,7 +229,7 @@ int SelectNextItem(int defaultIndex, bool byGroup) {
     )
         index++;
 
-    listSelectedIndex = index < (int)vListItems.size() ? index : -1;
+    listSelectedIndex = index < listLength ? index : -1;
 
     return listSelectedIndex;
 }
@@ -255,29 +243,20 @@ void UnselectItem(void) {
 }
 
 bool IsItemNewGroup(int index) {
-    ASSERT(index < (int)vListItems.size());
-
-    if (index == 0)
-        return vListItems[index].iGroup != 0;
-
-    return vListItems[index - 1].iGroup != vListItems[index].iGroup;
+    return index == 0
+        || pListItems[index - 1].iGroup != pListItems[index].iGroup;
 }
 
 bool IsItemNewType(int index) {
-    ASSERT(index < (int)vListItems.size());
-
-    if (index == 0)
-        return true;
-
-    return vListItems[index - 1].type != vListItems[index].type;
+    return index == 0
+        || pListItems[index - 1].type != pListItems[index].type;
 }
 
-int CountSameTypeAs(int index, int limit) {
-    ASSERT(index < (int)vListItems.size());
-    DataItemType t = vListItems[index].type;
+int CountSameTypeAs(int index) {
+    DataItemType t = pListItems[index].type;
 
     int i = index + 1;
-    while (i < (int)vListItems.size() && vListItems[i].type == t && i - index < limit)
+    while (i < listLength && pListItems[i].type == t)
         i++;
 
     return i - index;

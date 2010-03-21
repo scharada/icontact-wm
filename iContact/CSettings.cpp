@@ -15,173 +15,226 @@ You should have received a copy of the GNU General Public License
 along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************/
 
-#include "stdafx.h"
+#include <stdafx.h>
+#include <string.h>
 
-#include "resourceppc.h"
 #include "CSettings.h"
 #include "Macros.h"
-#include "RegistryUtils.h"
-#include "FileUtils.h"
 
 CSettings::CSettings(void) {
-	TCHAR buffer[MAX_PATH] = {0};
-	TCHAR szLanguagePath[MAX_PATH] = {0};
+    this->ini = CSimpleIniW(false, false, false);
+    this->iniLanguage = CSimpleIniW(false, false, false);
+    this->iniSkin = CSimpleIniW(false, false, false);
+
+    TCHAR szLanguagePath[MAX_PATH];
+    TCHAR szSkinPath[MAX_PATH];
+
+    // Get program file path
+	GetModuleFileName(NULL, this->szIniPath, MAX_PATH);
+
+    TCHAR * pstr = _tcsrchr(szIniPath, '\\');
+	if (pstr) *(++pstr) = '\0';
+
+    StringCchCopy(szLanguagePath, MAX_PATH, this->szIniPath);
+    StringCchCopy(szSkinPath, MAX_PATH, this->szIniPath);
+
+    StringCchCat(this->szIniPath, MAX_PATH, TEXT("settings.ini"));
 
     //////////////////////////////////////////////////
     // Settings
-    LoadSetting(this->email_account, REGISTRY_MAXLENGTH, SZ_ICONTACT_REG_KEY,
-        INI_EMAIL_ACCOUNT_KEY, INI_EMAIL_ACCOUNT_DEFAULT);
+	this->ini.LoadFile(szIniPath);
 
-	LoadSetting(buffer, REGISTRY_MAXLENGTH, SZ_ICONTACT_REG_KEY,
-        INI_EXIT_ON_MIN_KEY, INI_EXIT_ON_MIN_DEFAULT);
-    this->doExitOnMinimize = '1' == buffer[0];
+    this->email_account = ini.GetValue(
+        MAIN_SECTION, INI_EMAIL_ACCOUNT_KEY, INI_EMAIL_ACCOUNT_DEFAULT);
 
-	LoadSetting(buffer, REGISTRY_MAXLENGTH, SZ_ICONTACT_REG_KEY,
-        INI_EXIT_ON_ACTION_KEY, INI_EXIT_ON_ACTION_DEFAULT);
-    this->doExitOnAction = '1' == buffer[0];
+    this->favorite_category = ini.GetValue(
+        MAIN_SECTION, INI_FAVORITE_CAT_KEY, INI_FAVORITE_CAT_DEFAULT);
 
-    LoadSetting(buffer, REGISTRY_MAXLENGTH, SZ_ICONTACT_REG_KEY,
-        INI_FAST_GFX_KEY, INI_FAST_GFX_DEFAULT);
-    this->doFastGraphics = '1' == buffer[0];
+	this->doExitOnMinimize = 0 == wmemcmp(ini.GetValue(
+		MAIN_SECTION, INI_EXIT_ON_MIN_KEY, INI_EXIT_ON_MIN_DEFAULT), 
+        TEXT("1"), 1);
 
-	LoadSetting(buffer, REGISTRY_MAXLENGTH, SZ_ICONTACT_REG_KEY,
-        INI_FULLSCREEN_KEY, INI_FULLSCREEN_DEFAULT);
-    this->doShowFullScreen = '1' == buffer[0];
-   
-	LoadSetting(buffer, REGISTRY_MAXLENGTH, SZ_ICONTACT_REG_KEY,
-        INI_ENABLE_SENSOR_KEY, INI_ENABLE_SENSOR_DEFAULT);
-    this->doEnableSensor = '1' == buffer[0];
+	this->doExitOnAction = 0 == wmemcmp(ini.GetValue(
+		MAIN_SECTION, INI_EXIT_ON_ACTION_KEY, INI_EXIT_ON_ACTION_DEFAULT), 
+        TEXT("1"), 1);
 
-	LoadSetting(buffer, REGISTRY_MAXLENGTH, SZ_ICONTACT_REG_KEY,
-		INI_GRAVITY_KEY, INI_GRAVITY_DEFAULT);
-	this->gravity = min(100, max(-100, _ttol(buffer))) / (float)100.0;
+    this->doFastGraphics = 0 == wmemcmp(ini.GetValue(
+        MAIN_SECTION, INI_FAST_GFX_KEY, INI_FAST_GFX_DEFAULT), 
+        TEXT("1"), 1);
 
-    LoadSetting(buffer, MAX_PATH, SZ_ICONTACT_REG_KEY,
-        INI_SKIN_KEY, INI_SKIN_DEFAULT);
-	if (buffer[0] == '\\') 
-		StringCchCopy(this->skin_path, MAX_PATH, buffer);
-	else
-	    GetCurDirFilename(this->skin_path, buffer, TEXT("png"));
+	this->doShowFullScreen = 0 == wmemcmp(ini.GetValue(
+		MAIN_SECTION, INI_FULLSCREEN_KEY, INI_FULLSCREEN_DEFAULT),
+		TEXT("1"), 1);
 
-	// use the default skin anyway, if the specified skin can't be found
-	if (!FileExists(this->skin_path)) {
-		GetCurDirFilename(this->skin_path, INI_SKIN_DEFAULT, TEXT("png"));
-
-		// die if the skin _still_ can't be found
-		if (!FileExists(this->skin_path)) {
-			HWND hWnd = FindWindow (SZ_APP_NAME, NULL);
-			MessageBox(hWnd, TEXT("No skin found"), SZ_APP_NAME, 0);
-			PostMessage(hWnd, WM_CLOSE, 0, 0);
-		}
-	}
-
-    LoadSetting(buffer, MAX_PATH, SZ_ICONTACT_REG_KEY,
-        INI_LANGUAGE_KEY, INI_LANGUAGE_DEFAULT);
-	if (buffer[0] == '\\') 
-		StringCchCopy(szLanguagePath, MAX_PATH, buffer);
-	else
-	    GetCurDirFilename(szLanguagePath, buffer, TEXT("lng"));
+    this->skin_name = ini.GetValue(
+        MAIN_SECTION, INI_SKIN_KEY, INI_SKIN_DEFAULT);
+    StringCchCat(szSkinPath, MAX_PATH, this->skin_name);
+    StringCchCat(szSkinPath, MAX_PATH, TEXT(".skn"));
+    
+    StringCchCat(szLanguagePath, MAX_PATH, ini.GetValue(
+        MAIN_SECTION, INI_LANGUAGE_KEY, INI_LANGUAGE_DEFAULT));
+    StringCchCat(szLanguagePath, MAX_PATH, TEXT(".lng"));
 
     //////////////////////////////////////////////////
     // Language
+	this->iniLanguage.LoadFile(szLanguagePath);
+
     const struct LanguageSetting languageSettings[] = {
-		&this->favorites_default, TEXT("favorites="), TEXT("Favorites"),
-        &this->alphabet, TEXT("alphabet="), TEXT(""),
-        &this->mobile_string, TEXT("mobile="), TEXT("Mobile"),
-        &this->home_string, TEXT("home="), TEXT("Home"),
-        &this->work_string, TEXT("work="), TEXT("Work"),
-        &this->company_string, TEXT("company="), TEXT("Company"),
-        &this->car_string, TEXT("car="), TEXT("Car"),
-        &this->assistant_string, TEXT("assistant="), TEXT("Assistant"),
-        &this->fax_string, TEXT("fax="), TEXT("Fax"),
-        &this->pager_string, TEXT("pager="), TEXT("Pager"),
-        &this->radio_string, TEXT("radio="), TEXT("Radio"),
-        &this->email_string, TEXT("email="), TEXT("E-mail"),
-        &this->sms_string, TEXT("sms="), TEXT("SMS"),
-        &this->today_string, TEXT("today="), TEXT("Today"),
-        &this->yesterday_string, TEXT("yesterday="), TEXT("Yesterday"),
-        &this->sunday_string, TEXT("sunday="), TEXT("Sunday"),
-        &this->monday_string, TEXT("monday="), TEXT("Monday"),
-        &this->tuesday_string, TEXT("tuesday="), TEXT("Tuesday"),
-        &this->wednesday_string, TEXT("wednesday="), TEXT("Wednesday"),
-        &this->thursday_string, TEXT("thursday="), TEXT("Thursday"),
-        &this->friday_string, TEXT("friday="), TEXT("Friday"),
-        &this->saturday_string, TEXT("saturday="), TEXT("Saturday"),
-        &this->older_string, TEXT("older="), TEXT("Older"),
-        &this->date_string, TEXT("date="), TEXT("Date"),
-        &this->duration_string, TEXT("duration="), TEXT("Duration"),
-        &this->seconds_string, TEXT("seconds="), TEXT("Seconds"),
-        &this->outgoing_string, TEXT("outgoing="), TEXT("Outgoing Call"),
-        &this->missed_string, TEXT("missed="), TEXT("Missed Call"),
-        &this->incoming_string, TEXT("incoming="), TEXT("Incoming Call"),
-        &this->unknown_string, TEXT("unknown="), TEXT("Unknown"),
-        &this->returncall_string, TEXT("returncall="), TEXT("Return Call"),
-        &this->savecontact_string, TEXT("savecontact="), TEXT("Save Contact"),
-        &this->managecontact_string, TEXT("managecontact="), TEXT("Manage Contact"),
-        &this->editcontact_string, TEXT("editcontact="), TEXT("Edit Contact"),
-        &this->recents_string, TEXT("recents="), TEXT("Recents"),
-        &this->allcontacts_string, TEXT("allcontacts="), TEXT("All Contacts"),
-        &this->details_string, TEXT("details="), TEXT("Details"),
-        &this->categories_string, TEXT("categories="), TEXT("Categories"),
-		&this->createshortcut_string, TEXT("createshortcut="), TEXT("Create Shortcut"),
-		&this->removeshortcut_string, TEXT("removeshortcut="), TEXT("Remove Shortcut")
+        &this->alphabet, TEXT("alphabet"), TEXT(""),
+        &this->mobile_string, TEXT("mobile"), TEXT("Mobile"),
+        &this->home_string, TEXT("home"), TEXT("Home"),
+        &this->work_string, TEXT("work"), TEXT("Work"),
+        &this->company_string, TEXT("company"), TEXT("Company"),
+        &this->car_string, TEXT("car"), TEXT("Car"),
+        &this->assistant_string, TEXT("assistant"), TEXT("Assistant"),
+        &this->fax_string, TEXT("fax"), TEXT("Fax"),
+        &this->pager_string, TEXT("pager"), TEXT("Pager"),
+        &this->radio_string, TEXT("radio"), TEXT("Radio"),
+        &this->email_string, TEXT("email"), TEXT("E-mail"),
+        &this->sms_string, TEXT("sms"), TEXT("SMS"),
+        &this->today_string, TEXT("today"), TEXT("Today"),
+        &this->yesterday_string, TEXT("yesterday"), TEXT("Yesterday"),
+        &this->sunday_string, TEXT("sunday"), TEXT("Sunday"),
+        &this->monday_string, TEXT("monday"), TEXT("Monday"),
+        &this->tuesday_string, TEXT("tuesday"), TEXT("Tuesday"),
+        &this->wednesday_string, TEXT("wednesday"), TEXT("Wednesday"),
+        &this->thursday_string, TEXT("thursday"), TEXT("Thursday"),
+        &this->friday_string, TEXT("friday"), TEXT("Friday"),
+        &this->saturday_string, TEXT("saturday"), TEXT("Saturday"),
+        &this->older_string, TEXT("older"), TEXT("Older"),
+        &this->date_string, TEXT("date"), TEXT("Date"),
+        &this->duration_string, TEXT("duration"), TEXT("Duration"),
+        &this->seconds_string, TEXT("seconds"), TEXT("Seconds"),
+        &this->outgoing_string, TEXT("outgoing"), TEXT("Outgoing Call"),
+        &this->missed_string, TEXT("missed"), TEXT("Missed Call"),
+        &this->incoming_string, TEXT("incoming"), TEXT("Incoming Call"),
+        &this->unknown_string, TEXT("unknown"), TEXT("Unknown"),
+        &this->returncall_string, TEXT("returncall"), TEXT("Return Call"),
+        &this->savecontact_string, TEXT("savecontact"), TEXT("Save Contact"),
+        &this->managecontact_string, TEXT("managecontact"), TEXT("Manage Contact"),
+        &this->editcontact_string, TEXT("editcontact"), TEXT("Edit Contact"),
+        &this->recents_string, TEXT("recents"), TEXT("Recents"),
+        &this->allcontacts_string, TEXT("allcontacts"), TEXT("All Contacts"),
+        &this->details_string, TEXT("details"), TEXT("Details"),
+        &this->categories_string, TEXT("categories"), TEXT("Categories"),
     };
 
-	// Read the file into this->language_data TCHAR array
-    HANDLE hCache = CreateFile(szLanguagePath, GENERIC_READ, 0, NULL, 
-        OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-	SetFilePointer(hCache, 0, NULL, FILE_BEGIN);
-
-	char cbuffer[2048];
-    DWORD dwFileSize = min(2048, GetFileSize(hCache, NULL));
-    DWORD dwBytesRead;
-
-    BOOL readOk = ReadFile(hCache, cbuffer, dwFileSize, &dwBytesRead, NULL);
-
-    if (!readOk) {
-        // TODO: report error?
-        for (int i = 0; i < ARRAYSIZE(languageSettings); i++) {
-            *(languageSettings[i].ppSetting) = languageSettings[i].pszDefault;
-        }
-    }
-    else {
-        ASSERT(dwFileSize == dwBytesRead);
-    	::mbstowcs(this->language_data, cbuffer, 2048);
-
-	    // Then set all the TCHAR * to the appropriate locations in that array
-	    TCHAR * pStr = 0;
-        for (int i = 0; i < ARRAYSIZE(languageSettings); i++) {
-
-		    pStr = _tcsstr(this->language_data, languageSettings[i].pszName);
-
-		    if (pStr == NULL) {
-			    *(languageSettings[i].ppSetting) = languageSettings[i].pszDefault;
-			    continue;
-		    }
-
-		    // we want what's after the equal, not what's before it
-            *(languageSettings[i].ppSetting) = _tcsstr(pStr, TEXT("=")) + 1;
-        }
-
-	    // Then add nulls in the appropriate locations 
-	    // (replace '=', '\r', '\n', with 0)
-	    // (the other data in the file is then just junk)
-	    for (pStr = this->language_data; pStr < this->language_data + 2048; pStr++) {
-		    if (*pStr == '\r' || *pStr == '\n' || *pStr == '=')
-			    *pStr = 0;
-	    }
+    for (int i = 0; i < ARRAYSIZE(languageSettings); i++) {
+        *(languageSettings[i].ppSetting) = this->iniLanguage.GetValue(
+            LANGUAGE_SECTION, languageSettings[i].pszName, 
+            languageSettings[i].pszDefault);
     }
 
     //////////////////////////////////////////////////
-	// Special handling for "Favorites" category:
-	
-	// 1. If they've chosen a category specifically, it's in the registry
-    LoadSetting(this->favorite_category, REGISTRY_MAXLENGTH, SZ_ICONTACT_REG_KEY,
-        INI_FAVORITE_CAT_KEY, NULL);
+    // Skin
+	this->iniSkin.LoadFile(szSkinPath);
 
-	// 2. Otherwise, use the default category from the language file
-	// (or "Favorites" if it doesn't exist in the language file)
-	if (0 == _tcslen(this->favorite_category))
-		StringCchCopy(this->favorite_category, REGISTRY_MAXLENGTH,
-			this->favorites_default);
+    // Colors, Brushes & Fonts
+    this->rgbHeader = this->initColor(
+        SKIN_SECTION, TEXT("HeaderText"), TEXT("ffffff"));
+
+    this->rgbHeaderLoading = this->initColor(
+        SKIN_SECTION, TEXT("HeaderLoadingText"), TEXT("7f7f7f"));
+
+	this->hbrListGroupBackground = CreateSolidBrush(this->initColor(
+		SKIN_SECTION, TEXT("ListGroupBackground"), TEXT("000000")));
+
+	this->rgbListGroupText = this->initColor(
+		SKIN_SECTION, TEXT("ListGroupText"), TEXT("ffffff"));
+
+    this->hbrListItemBackground = CreateSolidBrush(this->initColor(
+		SKIN_SECTION, TEXT("ListItemBackground"), TEXT("1e1e1e")));
+
+	this->rgbListItemText = this->initColor(
+		SKIN_SECTION, TEXT("ListItemText"), TEXT("dcdcdc"));
+    this->hbrListItemForeground = CreateSolidBrush(this->rgbListItemText);
+    this->hpenListItemForeground = CreatePen(PS_SOLID, 1, this->rgbListItemText);
+
+    this->rgbListItemMissedText = this->initColor(
+		SKIN_SECTION, TEXT("ListItemMissedText"), TEXT("ff0000"));
+
+    this->rgbListItemFavoriteText = this->initColor(
+		SKIN_SECTION, TEXT("ListItemFavoriteText"), TEXT("ffff00"));
+
+    this->rgbListItemSelectedBackground1 = this->initColor(
+        SKIN_SECTION, TEXT("ListItemSelectedBackground1"), TEXT("4b5ab5"));
+
+    this->rgbListItemSelectedBackground2 = this->initColor(
+        SKIN_SECTION, TEXT("ListItemSelectedBackground2"), TEXT("162793"));
+
+    this->hbrListItemSelectedBackground = CreateSolidBrush(this->initColor(
+        SKIN_SECTION, TEXT("ListItemSelectedBackground1"), TEXT("4b5ab5")));
+
+	this->rgbListItemSelectedText = this->initColor(
+		SKIN_SECTION, TEXT("ListItemSelectedText"), TEXT("e6e6e6"));
+
+    // If the selected shadow doesn't exist in the file,
+    // make it the same as the selected text 
+    // (and then it won't get displayed later)
+    const TCHAR * tszListItemSelectedShadow = iniSkin.GetValue(
+        SKIN_SECTION, TEXT("ListItemSelectedShadow"), NULL);
+    this->rgbListItemSelectedShadow = 
+        tszListItemSelectedShadow == NULL
+        ? this->rgbListItemSelectedText
+        : parseColor(tszListItemSelectedShadow, TEXT("505050"));
+
+	this->hbrListItemSeparator = CreateSolidBrush(this->initColor(
+		SKIN_SECTION, TEXT("ListItemSeparator"), TEXT("323232")));
+    
+    this->rgbDetailMainText = this->initColor(
+		SKIN_SECTION, TEXT("DetailMainText"), TEXT("e6e6e6"));
+    
+    this->rgbDetailMainShadow = this->initColor(
+		SKIN_SECTION, TEXT("DetailMainShadow"), TEXT("505050"));
+
+    this->hbrDetailItemSeparator = CreateSolidBrush(this->initColor(
+        SKIN_SECTION, TEXT("DetailItemSeparator"), TEXT("999999")));
+
+    this->rgbKeyboardText = this->initColor(
+		SKIN_SECTION, TEXT("KeyboardText"), TEXT("dcdcdc"));
+
+    this->hbrKeyboardBackground = CreateSolidBrush(this->initColor(
+        SKIN_SECTION, TEXT("KeyboardBackground"), TEXT("464646")));
+
+    this->hpenKeyboardGrid = CreatePen(PS_SOLID, 1, this->initColor(
+		SKIN_SECTION, TEXT("KeyboardGrid"), TEXT("646464")));
+}
+
+CSettings::~CSettings(void) {
+    // Deallocate all memory used by the ini object
+    this->ini.Reset();
+    this->iniSkin.Reset();
+    this->iniLanguage.Reset();
+}
+
+void CSettings::Save() {
+    this->ini.SaveFile(this->szIniPath);
+}
+
+COLORREF CSettings::initColor(TCHAR * wp_section, TCHAR * wp_key,
+                        TCHAR * wp_default_hex) {
+
+    const TCHAR * wpColor = this->iniSkin.GetValue(
+        wp_section, wp_key, wp_default_hex);
+
+    return parseColor(wpColor, wp_default_hex);
+}
+
+COLORREF parseColor(const TCHAR * color_hex, const TCHAR * default_hex) {
+    const TCHAR * source = _tcslen(color_hex) == 6 
+        ? color_hex : default_hex;
+
+    TCHAR red[3];
+    TCHAR green[3];
+    TCHAR blue[3];
+
+	StringCchCopy(red, 3, source);
+	StringCchCopy(green, 3, source + 2);
+	StringCchCopy(blue, 3, source + 4);
+
+	int r = _tcstol(red, NULL, 16);
+	int g = _tcstol(green, NULL, 16);
+	int b = _tcstol(blue, NULL, 16);
+
+	return RGB(r, g, b);
 }
