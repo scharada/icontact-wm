@@ -1,0 +1,27 @@
+<application>
+  <name>iContact</name>
+  <version>0.73</version>
+  <description>
+    <![CDATA[<b>iContact</b><br />A new implementation of iContact by supbro building on the source code release by Larna, with aditional features including Full screen, and a top bar based on A_Cs S2 series.
+  <br />
+  <br />
+  Check http://www.supware.net/iContact for more info!
+  <br />
+  <br />
+  <b>Release Notes:</b><br/><br />
+  <b>0.73</b> - June 11, 2008
+  <ul>
+    <li>Added "auto-alphabet" ability for those who don't want a fixed alphabet</li>
+    <li>Bugfix: favorites categories had a fixed reference to the word "Favorites"</li>
+    <li>Added language string for name of categories field "Categories"</li>
+	  <li>Added language string for "unknown"</li>
+    <li>Critical bugfix: program sometimes crashed when viewing logs (thanks deedee)</li>
+    <li>Added FastGraphics setting to settings.ini, for faster graphics without transparency</li>
+    <li>General code cleanup</li>
+    <li>Improved keyboard scrolling through long list</li>
+    <li>Increased Maximum length of contact name &amp; email address</li>
+  </ul>]]>
+  </description>
+  <versionurl>http://www.supware.net/iContact/net.supware.icontact.xml</versionurl>
+  <caburl>http://www.supware.net/iContact/iContact.cab</caburl>
+</application>
