@@ -25,20 +25,19 @@ along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 // Define this when taking screenshots to show a missed call
 //#define DEBUG_SCREENSHOTS
 
-// These functions are for the main Recents list
-HRESULT RecentsPopulate(DataItem * parent, void (*adder)(DataItem*),
-                        CSettings * pSettings);
-HRESULT RecentsGetTitle(DataItem * data, TCHAR * buffer, int cchDest,
-                        CSettings * pSettings);
-HRESULT RecentsGetGroup(DataItem * data, TCHAR * buffer, int cchDest,
-                        CSettings * pSettings);
-HRESULT RecentsClick(DataItem * data, float x,
-                     int * newScreen, CSettings * pSettings);
+class ListDataCallLog : public ListData {
+public:
+    ListDataCallLog(CSettings *);
+    void Release(void);
+    HRESULT Populate(void);
+    HRESULT PopulateDetailsFor(int);
+    void GetItemGroup(int, TCHAR *);
+    void ToggleFavorite();
+    HRESULT DisplayItem();
+    void EditItem();
+};
 
-// These functions are for a recent details screen
-HRESULT RecentDetailsPopulate(DataItem * parent, void (*adder)(DataItem*),
-                              CSettings * pSettings);
-HRESULT RecentDetailsGetTitle(DataItem * data, TCHAR * buffer, int cchDest,
-                        CSettings * pSettings);
-HRESULT RecentDetailsClick(DataItem * data, float x, int * newScreen,
-                           CSettings * pSettings);
+TCHAR _getPastTime(FILETIME ftTime, TCHAR * pszSecondary = NULL, int strLength = 0);
+void _printDate(TCHAR * str, int strLength, FILETIME ft);
+void _printDuration(TCHAR * str, int strLength, FILETIME ftStart,
+                    FILETIME ftEnd, CSettings * pSettings);

@@ -26,6 +26,24 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_1E18F4925EA445DE874B2A4C4B20B1EA"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_32C9466FBD924642AD1FEA61E602FBA3"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_58CCBFE244F14732A0FA04081944FE27"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_647EFA11DEDA4AD891E0CD36DE14372D"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -33,6 +51,12 @@
         "Entry"
         {
         "MsmKey" = "8:_69BB95C43B4140DDBEDD33449E536309"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_76B422B31E1240C4890B731B1D61EEDE"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -116,6 +140,60 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{BA458234-9B71-4F46-8107-E91156377184}:_1E18F4925EA445DE874B2A4C4B20B1EA"
+            {
+            "SourcePath" = "8:..\\data\\iContact.cpl"
+            "TargetName" = "8:iContact.cpl"
+            "Tag" = "8:"
+            "Folder" = "8:_50CFA739D24B4696A299BA802FE8733F"
+            "Condition" = "8:"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "Register" = "3:0"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{BA458234-9B71-4F46-8107-E91156377184}:_32C9466FBD924642AD1FEA61E602FBA3"
+            {
+            "SourcePath" = "8:..\\data\\iphone.png"
+            "TargetName" = "8:iphone.png"
+            "Tag" = "8:"
+            "Folder" = "8:_21556AC0572C490981F786B2356F86D1"
+            "Condition" = "8:"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "Register" = "3:0"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{BA458234-9B71-4F46-8107-E91156377184}:_58CCBFE244F14732A0FA04081944FE27"
+            {
+            "SourcePath" = "8:..\\data\\default.skn"
+            "TargetName" = "8:default.skn"
+            "Tag" = "8:"
+            "Folder" = "8:_21556AC0572C490981F786B2356F86D1"
+            "Condition" = "8:"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "Register" = "3:0"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{BA458234-9B71-4F46-8107-E91156377184}:_647EFA11DEDA4AD891E0CD36DE14372D"
             {
             "SourcePath" = "8:..\\data\\net.supware.icontact.xml"
@@ -152,6 +230,24 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{BA458234-9B71-4F46-8107-E91156377184}:_76B422B31E1240C4890B731B1D61EEDE"
+            {
+            "SourcePath" = "8:..\\data\\iphone.skn"
+            "TargetName" = "8:iphone.skn"
+            "Tag" = "8:"
+            "Folder" = "8:_21556AC0572C490981F786B2356F86D1"
+            "Condition" = "8:"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "Register" = "3:0"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
         }
         "Folder"
         {
@@ -165,22 +261,13 @@
                 {
                 }
             }
-            "{F6DFDB62-1DD1-498B-89B7-27BAC542EE5A}:_224510189B014E91AB5F1CE9A1074517"
+            "{F6DFDB62-1DD1-498B-89B7-27BAC542EE5A}:_50CFA739D24B4696A299BA802FE8733F"
             {
-            "Name" = "8:#1919"
+            "Name" = "8:#1912"
             "Condition" = "8:"
-            "Property" = "8:%CE17%"
+            "Property" = "8:%CE2%"
                 "Folders"
                 {
-                    "{5943FCFD-5B64-4EE4-96C9-4618EC95352A}:_0CD25DE9E9F14600BEAD24EA0CF30D4C"
-                    {
-                    "Name" = "8:Settings"
-                    "Condition" = "8:"
-                    "Property" = "8:_94B6E795302D4B89BDC252C0AB5A4FB5"
-                        "Folders"
-                        {
-                        }
-                    }
                 }
             }
             "{27CA7284-31D3-408F-812A-1EF9ACCDB822}:_7DA8CB98FE6B40289DDA098B67A77F36"
@@ -395,16 +482,6 @@
         }
         "Shortcut"
         {
-            "{971D45E9-E38C-49AC-B36E-4C5BEA533350}:_001A6C0C5F3547A285DBF741D32E176F"
-            {
-            "Name" = "8:iContact"
-            "Arguments" = "8:"
-            "Description" = "8:"
-            "ShowCmd" = "3:1"
-            "Target" = "8:_DC572D43BAA54E648EFA90B71A7C3CB1"
-            "Folder" = "8:_0CD25DE9E9F14600BEAD24EA0CF30D4C"
-            "WorkingFolder" = "8:_21556AC0572C490981F786B2356F86D1"
-            }
             "{971D45E9-E38C-49AC-B36E-4C5BEA533350}:_1877EDB79FBE4058A90FDC32FBAEFA0C"
             {
             "Name" = "8:iContact"

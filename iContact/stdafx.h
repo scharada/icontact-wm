@@ -26,9 +26,7 @@ along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 #pragma comment(linker, "/nodefaultlib:libcd.lib")
 
 // NOTE - this value is not strongly correlated to the Windows CE OS version being targeted
-#ifndef WINVER
 #define WINVER _WIN32_WCE
-#endif
 
 #include <ceconfig.h>
 #if defined(WIN32_PLATFORM_PSPC) || defined(WIN32_PLATFORM_WFSP)
@@ -38,6 +36,9 @@ along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 #ifdef _CE_DCOM
 #define _ATL_APARTMENT_THREADED
 #endif
+
+#include <windows.h>
+#include <commctrl.h>
 
 #include <aygshell.h>
 #pragma comment(lib, "aygshell.lib") 
@@ -74,3 +75,6 @@ along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 #endif
 
 #include <altcecrt.h>
+
+// TODO: reference additional headers your program requires here
+#pragma comment( lib ,"phone.lib" )

@@ -19,36 +19,36 @@ along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "stdafx.h"
 #include "macros.h"
-#include "resourceppc.h"
+
 #include <pimstore.h>
 
-// These functions are for categories
-HRESULT PoomCategoriesPopulate(DataItem * parent, void (*adder)(DataItem*),
-                     CSettings * pSettings);
-HRESULT PoomCategoriesGetTitle(DataItem * parent, TCHAR * buffer, int cchDest,
-                     CSettings * pSettings);
-HRESULT PoomCategoriesClick(DataItem * data, float x, 
-                  int * newScreen, CSettings * pSettings);
+#include "CSettings.h"
+#include "ListData.h"
 
-// These functions are for the main list of contacts
-HRESULT PoomPopulate(DataItem * parent, void (*adder)(DataItem*),
-                     CSettings * pSettings);
-HRESULT PoomGetTitle(DataItem * parent, TCHAR * buffer, int cchDest,
-                     CSettings * pSettings);
-HRESULT PoomGetGroup(DataItem * data, TCHAR * buffer, int cchDest,
-                     CSettings * pSettings);
-HRESULT PoomClick(DataItem * data, float x, 
-                  int * newScreen, CSettings * pSettings);
-HRESULT PoomAddItem();
+class ListDataPoom : public ListData {
+private:
+    IPOutlookApp2 * polApp;
+    IFolder * pCurrFldr;
+    IPOutlookItemCollection * pItemCol;
+	bool _bOnlyFavorites;
 
-// These functions are for a contact details screen
-HRESULT PoomDetailsPopulate(DataItem * parent, void (*adder)(DataItem*),
-                            CSettings * pSettings);
-HRESULT PoomDetailsGetTitle(DataItem * parent, TCHAR * buffer, int cchDest,
-                     CSettings * pSettings);
-HRESULT PoomDetailsClick(DataItem * data, float x,
-                         int * newScreen, CSettings * pSettings);
-HRESULT PoomDetailsToggleFavorite(DataItem * data, CSettings * pSettings);
+    void _construct(CSettings *, bool);
 
-HRESULT PoomDetailsLoadBitmap(DataItem * data, HBITMAP * phBitmap,
-                              UINT * puWidth, UINT * puHeight);
+    HRESULT _initPoom();
+
+    HRESULT _loadBitmap(int size);
+
+public:
+
+    ListDataPoom(CSettings *);
+	ListDataPoom(CSettings *, bool);
+
+    void Release(void);
+    HRESULT Populate(void);
+    HRESULT PopulateDetailsFor(int);
+
+    void ToggleFavorite();
+    void AddItem();
+    HRESULT DisplayItem();
+    void EditItem();
+};

@@ -15,22 +15,18 @@ You should have received a copy of the GNU General Public License
 along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************/
 
-// Settings.cpp : Defines the entry point for the application.
+// iContact.cpp : Defines the entry point for the application.
 //
 
 #include "stdafx.h"
 #include "Settings.h"
 #include "../iContact/CSettings.h"
-#include "../iContact/FileUtils.h"
+#include "../iContact/Titlebar.h"
 #include "../iContact/Macros.h"
 #include "../iContact/PhoneUtils.h"
-#include "../iContact/Skin.h"
-#include "../iContact/Titlebar.h"
-#include "../iContact/Version.h"
-#include "../iContact/RegistryUtils.h"
 
-// for EDB
-#include <windbase.h>
+// for favorites category
+#include <pimstore.h>
 
 // for email account
 #include <cemapi.h>
@@ -48,7 +44,6 @@ POINT       ptMouseDown = { -1, -1 };
 int         nTouchRadius = 4;
 
 // Graphic
-int         scale = 1;
 RECT		rScreen = {0};
 RECT        rTitlebar = {0};
 RECT        rContent = {0};
@@ -67,24 +62,54 @@ TCHAR       SettingOptions[MAX_OPTIONS][MAX_LOADSTRING];
 int         nOptions;
 
 // Pocket Outlook (POOM)
-//IPOutlookApp2 * polApp = NULL;
+IPOutlookApp2 * polApp = NULL;
+
+// UI Element Sizes. These can't be static because
+// of different DPI devices
+int         TitlebarHeight = TITLEBAR_HEIGHT;
+int         DefaultItemHeight = DEFAULT_ITEM_HEIGHT;
+int         DefaultGroupHeight = DEFAULT_GROUP_HEIGHT;
+int         HeaderHeight = HEADER_HEIGHT;
+int         HeaderClickHeight = HEADER_CLICK_HEIGHT;
+int         MenuBarHeight = MENU_BAR_HEIGHT;
+int         MenuBarIconWidth = MENU_BAR_ICON_WIDTH;
+
+int         TitlebarFontSize = TITLEBAR_FONT_SIZE;
+int	        ItemFontSize = ITEM_FONT_SIZE;
+int	        ItemSecondaryFontSize = ITEM_SECONDARY_FONT_SIZE;
+int	        KeyboardFontSize = KEYBOARD_FONT_SIZE;
+int	        ItemDetailsFontSize = ITEM_DETAILS_FONT_SIZE;
+int         ItemDetailsPictureSize = ITEM_DETAILS_PICTURE_SIZE;
+int         ItemDetailsPadding = ITEM_DETAILS_PADDING;
+int	        GroupItemFontSize = GROUP_ITEM_FONT_SIZE;
+int	        ListIndicatorFontSize = LIST_INDICATOR_FONT_SIZE;
+
+int	        ListItemIndent = LIST_ITEM_INDENT;
+int	        ListGroupItemIndent = LIST_GROUP_ITEM_INDENT;
+int	        ListSeparatorHeight = LIST_SEPARATOR_HEIGHT;
 
 // Fonts
 HFONT       TitlebarFont;
 HFONT		PrimaryListFont;
 HFONT		SecondaryListFont;
+HFONT		GroupFont;
+HFONT		ItemDetailsFont;
+HFONT		ListIndicatorFont;
+HFONT		KeyboardFont;
 
 // Screen buffers
 HDC         hdcMem = NULL;
 HBITMAP		hbmMem = NULL;
+HDC         hdcTmp = NULL;
+HBITMAP		hbmTmp = NULL;
 HDC			hdcSkin = NULL;
 HBITMAP		hbmSkin = NULL;
 HDC         hdcPage1 = NULL;
 HBITMAP     hbmPage1 = NULL;
 HDC         hdcPage2 = NULL;
 HBITMAP     hbmPage2 = NULL;
-HDC         hdcCanvas = NULL;
 HBITMAP     hbmCanvas = NULL;
+HBRUSH      hbrCanvas = NULL;
 
 // Scrolling
 bool		bDragging = false;
@@ -114,6 +139,16 @@ TransitionType trTransitionType = ttExpand;
 // Popup window
 bool        bDisplayingPopup = false;
 PopupType   ptPopupType = ptYesNo;
+
+// Keyboard Rows/Columns
+TCHAR       alphabet[ALPHABET_MAX_SIZE];
+int         nKeyboardLetters = 26;
+int         nKeyboardRows = 0;
+int         nKeyboardCols = 0;
+int		    GroupWidth = 0;     // Keyboard group width
+int		    GroupHeight = 0;    // Keyboard group height
+
+
 
 // Message dispatch table for MainWindowProc
 const struct decodeUINT MainMessages[] = {
@@ -172,12 +207,6 @@ struct SingleSetting Settings[] = {
     INI_LANGUAGE_DEFAULT,
     stList,
     languageFiller,
-
-    TEXT("Full Screen"), 
-    INI_FULLSCREEN_KEY,
-    INI_FULLSCREEN_DEFAULT,
-    stOnOff,
-    NULL,
 };
 
 TCHAR SettingValues[ARRAYSIZE(Settings)][MAX_LOADSTRING] = {0};
@@ -231,9 +260,9 @@ HWND InitInstance (HINSTANCE hInstance, LPWSTR lpCmdLine, int nCmdShow){
     wc.hInstance = hInstance;                 // Owner handle
     wc.hIcon = NULL;                          // Application icon
     wc.hCursor = LoadCursor (NULL, IDC_ARROW);// Default cursor
-    wc.hbrBackground = NULL;                  // No need to erase
+    wc.hbrBackground = (HBRUSH) GetStockObject (BLACK_BRUSH);
     wc.lpszMenuName =  NULL;                  // Menu name
-    wc.lpszClassName = SZ_APP_NAME;           // Window class name
+    wc.lpszClassName = SZ_APP_NAME;         // Window class name
 
     if (RegisterClass (&wc) == 0) return 0;
     // Create main window.
@@ -261,26 +290,50 @@ HWND InitInstance (HINSTANCE hInstance, LPWSTR lpCmdLine, int nCmdShow){
         return 0;
 
     // Additional initialization
-    //_initPoom();
+    _initPoom();
 
-    // Setup scaling. DPI must be an integer multiple of DEFAULT_DPI
-    // in order for everything to work correctly.
-    scale = int(DRA::LogPixelsX() / DEFAULT_DPI);
+    // Perform DPI adjustments
     HDC hdc = GetDC(hWnd);
+    int dpi = ::GetDeviceCaps(hdc, LOGPIXELSX);
+    if (dpi > DEFAULT_DPI) {
+        TitlebarHeight = MulDiv(TitlebarHeight, dpi, DEFAULT_DPI);
+        DefaultItemHeight = MulDiv(DefaultItemHeight, dpi, DEFAULT_DPI);
+        DefaultGroupHeight = MulDiv(DefaultGroupHeight, dpi, DEFAULT_DPI);
+        HeaderHeight = MulDiv(HeaderHeight, dpi, DEFAULT_DPI);
+        HeaderClickHeight = MulDiv(HeaderClickHeight, dpi, DEFAULT_DPI);
+        MenuBarHeight = MulDiv(MenuBarHeight, dpi, DEFAULT_DPI);
+        MenuBarIconWidth = MulDiv(MenuBarIconWidth, dpi, DEFAULT_DPI);
+
+        TitlebarFontSize = MulDiv(TitlebarFontSize, dpi, DEFAULT_DPI);
+        ItemFontSize = MulDiv(ItemFontSize, dpi, DEFAULT_DPI);
+        ItemSecondaryFontSize = MulDiv(ItemSecondaryFontSize, dpi, DEFAULT_DPI);
+        KeyboardFontSize = MulDiv(KeyboardFontSize, dpi, DEFAULT_DPI);
+        ItemDetailsFontSize = MulDiv(ItemDetailsFontSize, dpi, DEFAULT_DPI);
+        ItemDetailsPictureSize = MulDiv(ItemDetailsPictureSize, dpi, DEFAULT_DPI);
+        ItemDetailsPadding = MulDiv(ItemDetailsPadding, dpi, DEFAULT_DPI);
+        GroupItemFontSize = MulDiv(GroupItemFontSize, dpi, DEFAULT_DPI);
+        ListIndicatorFontSize = MulDiv(ListIndicatorFontSize, dpi, DEFAULT_DPI);
+
+        ListItemIndent = MulDiv(ListItemIndent, dpi, DEFAULT_DPI);
+        ListGroupItemIndent = MulDiv(ListGroupItemIndent, dpi, DEFAULT_DPI);
+        ListSeparatorHeight = MulDiv(ListSeparatorHeight, dpi, DEFAULT_DPI);
+    }
+
+    // Initialize titlebar callbacks
+    InitTitlebar(hWnd);
 
     // Create fonts
-    TitlebarFont = BuildFont(SCALE(TITLEBAR_FONT_SIZE), FALSE, FALSE);
-	PrimaryListFont = BuildFont(SCALE(ITEM_FONT_SIZE), FALSE, FALSE);
-	SecondaryListFont = BuildFont(SCALE(ITEM_SECONDARY_FONT_SIZE), TRUE, FALSE);
+    TitlebarFont = BuildFont(TitlebarFontSize, FALSE, FALSE);
+	PrimaryListFont = BuildFont(ItemFontSize, FALSE, FALSE);
+	SecondaryListFont = BuildFont(ItemSecondaryFontSize, TRUE, FALSE);
+	ItemDetailsFont = BuildFont(ItemDetailsFontSize, FALSE, FALSE);
+	GroupFont = BuildFont(GroupItemFontSize, TRUE, FALSE);
+    ListIndicatorFont = BuildFont(ListIndicatorFontSize, TRUE, FALSE);
+	KeyboardFont = BuildFont(KeyboardFontSize, TRUE, FALSE);
 
     // Create data lists
     pSettings = new CSettings();
-
-    // Initialize titlebar callbacks
-	if (pSettings->doShowFullScreen) 
-	    InitTitlebar(hWnd);
-
-	LoadSettings();
+    LoadSettings();
 
     InitSurface(hWnd);
 
@@ -343,7 +396,7 @@ LRESULT DoPaintMain (HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam) {
     rect = ps.rcPaint;
 
     // draw the screen...
-    DrawScreenOn(hdcMem, rect);
+    DrawScreenOn(hdcMem, hdcTmp, rect);
 
     // Transfer everything to the actual screen
     BitBlt(hdc, rect.left, rect.top, rect.right - rect.left,
@@ -364,23 +417,15 @@ LRESULT DoActivate (HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam) {
 
     if (wParam == WA_CLICKACTIVE || wParam == WA_ACTIVE) {
         // To switch to full screen mode, first hide all of the shell parts.
-
-		if (pSettings->doShowFullScreen) {
-			dwState = SHFS_HIDETASKBAR | SHFS_HIDESIPBUTTON;
-
-			// resize the main window to the size of the screen.
-			SetRect(&rc, 0, 0, GetSystemMetrics(SM_CXSCREEN), 
-				GetSystemMetrics(SM_CYSCREEN));
-		}
-		else {
-			dwState = SHFS_SHOWTASKBAR | SHFS_HIDESIPBUTTON;
-
-			// resize the main window to the size of the work area.
-			SystemParametersInfo(SPI_GETWORKAREA, 0, &rc, FALSE);
-		}
+        dwState = (SHFS_HIDETASKBAR 
+            | SHFS_HIDESTARTICON 
+            | SHFS_HIDESIPBUTTON);
 
         SHFullScreen(hWnd, dwState);
 
+        // Next resize the main window to the size of the screen.
+        SetRect(&rc, 0, 0, GetSystemMetrics(SM_CXSCREEN), 
+            GetSystemMetrics(SM_CYSCREEN));
         MoveWindow(hWnd, rc.left, rc.top, rc.right-rc.left, 
             rc.bottom-rc.top, TRUE);
 
@@ -401,9 +446,6 @@ LRESULT DoActivate (HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam) {
 
         MoveWindow(hWnd, rc.left, rc.top, rc.right-rc.left,
             rc.bottom-rc.top, TRUE);
-
-		// No need to keep this program around
-        DestroyWindow(hWnd);
     }
 
     return DefWindowProc (hWnd, wMsg, wParam, lParam);
@@ -443,7 +485,7 @@ LRESULT DoMouseDown (HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam) {
         return 0;
     }
 
-    return DefWindowProc (hWnd, wMsg, wParam, lParam);
+    return 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -488,7 +530,7 @@ LRESULT DoMouseMove (HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam) {
 
     UpdateWindow(hWnd);
 
-    return 0;
+	return 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -497,7 +539,6 @@ LRESULT DoMouseMove (HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam) {
 LRESULT DoMouseUp (HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam) {
 
     POINT pt;
-	TCHAR szUrl[MAX_PATH] = {0};
 
     if (bTransitioning)
         return 0;
@@ -545,37 +586,32 @@ LRESULT DoMouseUp (HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam) {
         int index = -1;
 
         // They clicked above the expanded part
-        if (y / SCALE(DEFAULT_ITEM_HEIGHT) <= nExpandedIndex) {
-            index = y / SCALE(DEFAULT_ITEM_HEIGHT);
+        if (y / DefaultItemHeight <= nExpandedIndex) {
+            index = y / DefaultItemHeight;
         }
 
         // They clicked below the expanded part
-        else if ((y - rExpandedHeight) / SCALE(DEFAULT_ITEM_HEIGHT) > nExpandedIndex) {
-            index = (y - rExpandedHeight) / SCALE(DEFAULT_ITEM_HEIGHT);
+        else if ((y - rExpandedHeight) / DefaultItemHeight > nExpandedIndex) {
+            index = (y - rExpandedHeight) / DefaultItemHeight;
         }
 
         // They clicked on the expanded part
         if (index == -1) {
             switch (Settings[nExpandedIndex].type) {
                 case stList:
-                    index = (y - (SCALE(DEFAULT_ITEM_HEIGHT) * nExpandedIndex)) 
-                        / SCALE(DEFAULT_ITEM_HEIGHT) - 1;
+                    index = (y - (DefaultItemHeight * nExpandedIndex)) 
+                        / DefaultItemHeight - 1;
                     
                     // They clicked "download more skins"
                     if (0 == _tcscmp(SettingOptions[index], 
                         SZ_DOWNLOAD_SKINS)) {
-                        // SCALEX(1) will be 1 for QVGA, 2 for VGA
-						StringCchPrintf(szUrl, MAX_PATH, TEXT("%s&vga=%d"),
-                            URL_DOWNLOAD_SKINS, SCALE(1));
-                        OpenURL(szUrl);
+                        OpenURL(URL_DOWNLOAD_SKINS);
                     }
                     
                     // They clicked "download more languages"
                     else if (0 == _tcscmp(SettingOptions[index], 
                         SZ_DOWNLOAD_LANGUAGES)) {
-						StringCchPrintf(szUrl, MAX_PATH, TEXT("%s&langid=%d"),
-							URL_DOWNLOAD_LANGUAGES, GetUserDefaultUILanguage());
-                        OpenURL(szUrl);
+                        OpenURL(URL_DOWNLOAD_LANGUAGES);
                     }
                     
                     // They clicked something starting with "AUTO",
@@ -624,7 +660,7 @@ LRESULT DoMouseUp (HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam) {
 
     UpdateWindow(hWnd);
 
-    return 0;
+	return 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -726,7 +762,8 @@ LRESULT DoTimer (HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam) {
 //-----------------------------------------------------------------------------
 // DoKeyDown - Process WM_KEYDOWN message for window
 //
-LRESULT DoKeyDown (HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam) {
+LRESULT DoKeyDown (HWND hWnd, UINT wMsg, WPARAM wParam,
+                       LPARAM lParam) {
     int top = 0;
     int bot = 0;
     bool bRepeating = (lParam & (1 << 30)) != 0;
@@ -739,24 +776,21 @@ LRESULT DoKeyDown (HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam) {
 
 	UpdateWindow(hWnd);
 
-    return 0;
+    return DefWindowProc (hWnd, wMsg, wParam, lParam);
 }
 
 
 //-----------------------------------------------------------------------------
 // DoDestroyMain - Process WM_DESTROY message for window
 //
-LRESULT DoDestroyMain (HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam) {
+LRESULT DoDestroyMain (HWND hWnd, UINT wMsg, WPARAM wParam, 
+                       LPARAM lParam) {
    
     // Uninitialize the COM classes
     CoUninitialize();
 
     // Save Settings
     SaveSettings();
-
-	// Clean up titlebar
-	if (pSettings->doShowFullScreen)
-		DestroyTitlebar();
 
     // Quit
     PostQuitMessage (0);
@@ -766,7 +800,7 @@ LRESULT DoDestroyMain (HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam) {
 //-----------------------------------------------------------------------------
 // Screen Drawing Functions
 //
-void DrawScreenOn(HDC hdc, RECT rClip) {
+void DrawScreenOn(HDC hdc, HDC hdcTmp, RECT rClip) {
 
     RECT rItem;
     rItem.bottom = rContent.top - Scrolled;
@@ -775,19 +809,20 @@ void DrawScreenOn(HDC hdc, RECT rClip) {
     rTouchZone.bottom = rTouchZone.top = 0;
 
     SetBkMode(hdc, TRANSPARENT);
+    SetBkMode(hdcTmp, TRANSPARENT);
 
 	// ******* DRAW LIST BACKGROUND
-	DrawCanvasOn(hdc, rContent);
+    FillRect(hdc, &rContent, hbrCanvas);
 
     // "About" at bottom of screen
     SelectObject(hdc, SecondaryListFont);
     SetTextAlign(hdc, TA_LEFT | TA_BOTTOM);
-    SetTextColor(hdc, GetSkinRGB(SKIN_COLOR_HEADER_LOADING_TEXT));
+    SetTextColor(hdc, pSettings->rgbListItemSelectedShadow);
     ExtTextOut(hdc, rContent.left + 2, rContent.bottom - 2, 
-        NULL, NULL, SZ_ABOUT, _tcslen(SZ_ABOUT), 0);
+        NULL, NULL, SZ_ABOUT, ABOUT_LENGTH, 0);
 
     HFONT hfOld = (HFONT)SelectObject(hdc, PrimaryListFont);
-    SetTextColor(hdc, GetSkinRGB(SKIN_COLOR_LIST_ITEM_TEXT));
+    SetTextColor(hdc, pSettings->rgbListItemText);
 
     // MAIN CONTENT
     for (int i = 0; i < ARRAYSIZE(Settings); i++) {
@@ -796,21 +831,21 @@ void DrawScreenOn(HDC hdc, RECT rClip) {
 
         // calculate rItem
         rItem.top = rItem.bottom;
-        rItem.bottom = rItem.top + SCALE(DEFAULT_ITEM_HEIGHT);
+        rItem.bottom = rItem.top + DefaultItemHeight;
         rItem.left = rContent.left;
         rItem.right = rContent.right;
-		DrawRect(hdc, &rItem, GetSkinRGB(SKIN_COLOR_LIST_ITEM_BACKGROUND));
-        int baseline = rItem.bottom - (SCALE(DEFAULT_ITEM_HEIGHT - ITEM_FONT_SIZE) / 2);
+        FillRect(hdc, &rItem, pSettings->hbrListItemBackground);
+        int baseline = rItem.bottom - ((DefaultItemHeight - ItemFontSize) / 2);
 
         // draw separator
         RECT rSep = rItem;
-        rSep.top = rItem.bottom - SCALE(LIST_SEPARATOR_HEIGHT);
-        DrawRect(hdc, &rSep, GetSkinRGB(SKIN_COLOR_LIST_ITEM_SEPARATOR));
+        rSep.top = rItem.bottom - ListSeparatorHeight;
+        FillRect(hdc, &rSep, pSettings->hbrListItemSeparator);
       
         // draw caption
         SetTextAlign(hdc, TA_LEFT | TA_BOTTOM);
-        SetTextColor(hdc, GetSkinRGB(SKIN_COLOR_LIST_ITEM_TEXT));
-        ExtTextOut(hdc, rItem.left + SCALE(LIST_ITEM_INDENT), baseline, 
+        SetTextColor(hdc, pSettings->rgbListItemText);
+        ExtTextOut(hdc, rItem.left + ListItemIndent, baseline, 
             ETO_CLIPPED, &rItem, ss.caption, _tcslen(ss.caption), NULL);
 
         // draw setting
@@ -824,78 +859,68 @@ void DrawScreenOn(HDC hdc, RECT rClip) {
         }
 
         // if this item is selected, draw the details
-        if (nExpandedIndex == i && ss.type == stList) {
-            int rPartialHeight = trTransitionType == ttExpand
+        if (nExpandedIndex == i) {
+            rItem.top = rItem.bottom;
+            rItem.bottom += trTransitionType == ttExpand
                 ? (int)(dTransitionPct * rExpandedHeight)
                 : (int)((1.0 - dTransitionPct) * rExpandedHeight);
+            rItem.left = ListItemIndent;
+            rItem.right -= ListItemIndent;
 
-            rItem.top = rItem.bottom;
-            rItem.bottom += rPartialHeight;
-            rItem.left = SCALE(LIST_ITEM_INDENT);
-            rItem.right -= rItem.left;
+            RECT rTmp;
+            rTmp.left = 0;
+            rTmp.top = 0;
+            rTmp.right = rItem.right - rItem.left;
+            rTmp.bottom = rExpandedHeight;
 
-            RECT rItemClip;
-            IntersectRect(&rItemClip, &rItem, &rClip);
+            if (ss.type == stList) {
+                DrawListDetailsOn(hdcTmp, rTmp, value);
+            }
 
-            DrawListDetailsOn(hdc, rItem, rItemClip, value);
+            BitBlt(hdc, rItem.left, rItem.top, 
+                rItem.right - rItem.left, rItem.bottom - rItem.top, 
+                hdcTmp, 0, rExpandedHeight - (rItem.bottom - rItem.top),
+                SRCCOPY);
         }
     }
 
     SelectObject(hdc, hfOld);
 
     // TITLE BAR
-    if (rClip.top < rTitlebar.bottom && pSettings->doShowFullScreen)
-	    DrawTitlebarOn(hdc, rTitlebar, hdcSkin, TitlebarFont);
+    if (rClip.top < rTitlebar.bottom)
+	    DrawTitlebarOn(hdc, rTitlebar, hdcSkin, TitlebarFont,
+            pSettings->rgbTitlebarBackground, pSettings->rgbTitlebarText,
+            pSettings->rgbTitlebarSignal);
 
 }
 
-void DrawListDetailsOn(HDC hdc, RECT rect, RECT rClip, const TCHAR * tszValue) {
-
-    RECT rItemClip;
-    RECT rItem = rect;
-    rItem.bottom = rect.bottom - rExpandedHeight;
-
-    int indent = SCALE(LIST_ITEM_INDENT);
-    int height = SCALE(DEFAULT_ITEM_HEIGHT);
-
-    DrawRect(hdc, &rClip, GetSkinRGB(SKIN_COLOR_LIST_ITEM_SEPARATOR));
+void DrawListDetailsOn(HDC hdc, RECT rect, const TCHAR * tszValue) {
+    FillRect(hdc, &rect, pSettings->hbrListItemSeparator);
 
     HFONT hfOld = (HFONT)SelectObject(hdc, PrimaryListFont);
-    SetTextColor(hdc, GetSkinRGB(SKIN_COLOR_LIST_ITEM_TEXT));
+    SetTextColor(hdc, pSettings->rgbListItemText);
     SetTextAlign(hdc, TA_LEFT | TA_TOP);
 
     for (int j = 0; j < nOptions; j++) {
-        rItem.top = rItem.bottom;
-        rItem.bottom += height;
-
-        IntersectRect(&rItemClip, &rItem, &rClip);
-        if (IsRectEmpty(&rItemClip))
-            continue;
-
-        ExtTextOut(hdc, rItem.left + indent * 2, rItem.top + indent,
-            ETO_CLIPPED, &rItemClip,
-            SettingOptions[j], _tcslen(SettingOptions[j]), NULL);
+        ExtTextOut(hdc, rect.left + ListItemIndent * 2, 
+            rect.top + ListItemIndent + j * DefaultItemHeight,
+            NULL, NULL, SettingOptions[j], 
+            _tcslen(SettingOptions[j]), NULL);
 
         if (0 == _tcscmp(tszValue, SettingOptions[j])
             || _tcslen(tszValue) == 0
             && _tcsstr(SettingOptions[j], SZ_AUTO) == SettingOptions[j]) {
-
-            int radius = indent / 2;
+            int radius = ListItemIndent / 2;
             Ellipse(hdc, 
-                rItem.left + indent - radius,
-                rItem.top + height / 2 - radius,
-                rect.left + indent + radius,
-                rItem.top + height / 2 + radius);
+                rect.left + ListItemIndent - radius,
+                rect.top + DefaultItemHeight / 2 - radius + j * DefaultItemHeight,
+                rect.left + ListItemIndent + radius,
+                rect.top + DefaultItemHeight / 2 + radius + j * DefaultItemHeight);
+
         }
     }
 
     SelectObject(hdc, hfOld);
-}
-
-void DrawRect(HDC hdc, LPRECT prc, COLORREF clr) {
-    COLORREF clrSave = SetBkColor(hdc, clr);
-    ExtTextOut(hdc,0,0,ETO_OPAQUE,prc,NULL,0,NULL);
-    SetBkColor(hdc, clrSave);
 }
 
 //-----------------------------------------------------------------------------
@@ -914,13 +939,7 @@ void InitSurface(HWND hWnd) {
 
     // Title bar, with date, carrier, battery, signal strength, etc.
 	rTitlebar = rScreen;
-	if (pSettings->doShowFullScreen) {
-		rTitlebar.bottom = rTitlebar.top + SCALE(TITLE_BAR_HEIGHT);
-	}
-	else {
-		// collapse new titlebar so it is not active
-		rTitlebar.bottom = rTitlebar.top;
-	}
+	rTitlebar.bottom = rTitlebar.top + TitlebarHeight;
 
     // From the header to the bottom of the screen
     rContent = rScreen;
@@ -936,12 +955,57 @@ void InitSurface(HWND hWnd) {
 	hbmMem = CreateCompatibleBitmap(hdc, nScreenWidth, nScreenHeight);
     SelectObject(hdcMem, hbmMem);
 
-    // Initialize skin
-    if (!hbmSkin) {
-		InitializeSkin(hdc);
-	}
+    // Temporary canvas
+    if (hdcTmp)
+        CBR(DeleteDC(hdcTmp));
+    hdcTmp = CreateCompatibleDC(hdc);
+    if (hbmTmp)
+        CBR(DeleteObject(hbmTmp));
+	hbmTmp = CreateCompatibleBitmap(hdc, nScreenWidth, nScreenHeight);
+    SelectObject(hdcTmp, hbmTmp);
 
-	InitializeCanvas();
+
+    // Calculate skin filename
+    if (!hbmSkin) {
+	    TCHAR szSkinFileName[MAX_PATH];
+        ::GetModuleFileName(NULL, szSkinFileName, MAX_PATH);
+	    TCHAR * pstr = _tcsrchr(szSkinFileName, '\\');
+	    if (pstr) *(++pstr) = '\0';
+	    StringCchCat(szSkinFileName, MAX_PATH, pSettings->skin_name);
+        StringCchCat(szSkinFileName, MAX_PATH, TEXT(".png"));
+
+        hbmSkin = SHLoadImageFile(szSkinFileName);
+
+	    // Load skin
+	    hdcSkin = CreateCompatibleDC(hdc);
+        SelectObject(hdcSkin, hbmSkin);
+
+        // find the size of the skin
+        BITMAP bmSkin;
+        GetObject(hbmSkin, sizeof(bmSkin), &bmSkin);
+        int nSkinWidth = bmSkin.bmWidth;
+        int nSkinHeight = bmSkin.bmHeight;
+
+        // Create canvas brush by copying the appropriate region
+        // from the skin into a bitmap
+        HDC hdcCanvas = CreateCompatibleDC(hdc);
+        hbmCanvas = CreateCompatibleBitmap(hdc, nSkinWidth, SKIN_CANVAS_HEIGHT);
+        SelectObject(hdcCanvas, hbmCanvas);
+
+        // for compatibility with older skins...
+        if (nSkinHeight != SKIN_CANVAS_Y_OFFSET + SKIN_CANVAS_HEIGHT) {
+            RECT rCanvas = {0, 0, nSkinWidth, SKIN_CANVAS_HEIGHT};
+            FillRect(hdcCanvas, &rCanvas, (HBRUSH)GetStockObject(BLACK_BRUSH));
+        }
+
+        else {
+            BitBlt(hdcCanvas, 0, 0, nSkinWidth, SKIN_CANVAS_HEIGHT, 
+                hdcSkin, 0, SKIN_CANVAS_Y_OFFSET, SRCCOPY);
+        }
+
+        hbrCanvas = CreatePatternBrush(hbmCanvas);
+        CBR(DeleteDC(hdcCanvas));
+    }
 
     CalculateHeights();
 
@@ -951,87 +1015,8 @@ Error:
     ASSERT(SUCCEEDED(hr));
 }
 
-COLORREF GetSkinRGB(int index) {
-	COLORREF c = GetPixel(hdcSkin, SCALE(index), 
-		SCALE(SKIN_COLORS_Y_OFFSET));
-	return c;
-}
-
-void InitializeSkin(HDC hdc) {
-    HBITMAP hbmSkinFile = SHLoadImageFile(pSettings->skin_path);
-    int nScreenWidth = SCALE(DEFAULT_SCREEN_WIDTH);
-    int nSkinHeight = SCALE(DEFAULT_SKIN_HEIGHT);
-
-	BITMAP bmp;
-	GetObject(hbmSkinFile, sizeof(bmp), &bmp);
-
-    // Load skin
-	HGDIOBJ hTmpOld = SelectObject(hdcMem, hbmSkinFile);
-
-	// Create skin bitmap
-	hbmSkin = CreateCompatibleBitmap(hdc, nScreenWidth, nSkinHeight);
-	hdcSkin = CreateCompatibleDC(hdc);
-	SelectObject(hdcSkin, hbmSkin);
-
-	// Stretch skin to properly fit the screen
-	StretchBlt(hdcSkin, 0, 0, nScreenWidth, nSkinHeight,
-		hdcMem, 0, 0, bmp.bmWidth, bmp.bmHeight, SRCCOPY);
-
-	// Restore the original hdcMem bitmap
-	SelectObject(hdcMem, hTmpOld);
-}
-
-void InitializeCanvas() {
-    int nScreenWidth = ::GetSystemMetrics(SM_CXSCREEN);
-	
-    if (hdcCanvas)
-        DeleteDC(hdcCanvas);
-    
-	hdcCanvas = CreateCompatibleDC(hdcSkin);
-    
-	if (hbmCanvas)
-        DeleteObject(hbmCanvas);
-    
-	hbmCanvas = CreateCompatibleBitmap(hdcSkin,
-		nScreenWidth, SCALE(DEFAULT_ITEM_HEIGHT));
-
-    SelectObject(hdcCanvas, hbmCanvas);
-
-	int textureWidth = SCALE(DEFAULT_SCREEN_WIDTH);
-    int textureHeight = SCALE(SKIN_CANVAS_HEIGHT);
-
-    BitBlt(hdcCanvas, 0, 0, SCALE(DEFAULT_SCREEN_WIDTH),
-		SCALE(SKIN_CANVAS_HEIGHT),
-        hdcSkin, 0, SCALE(SKIN_CANVAS_Y_OFFSET), SRCCOPY);
-
-    // copy the texture to the full screen width (if in landscape mode)
-    if (textureWidth < nScreenWidth) {
-        BitBlt(hdcCanvas, textureWidth, 0, 
-            nScreenWidth - textureWidth, textureHeight,
-            hdcCanvas, 0, 0, SRCCOPY);
-    }
-
-    // copy the texture to the full DEFAULT_ITEM_HEIGHT
-	// several BitBlt's is faster than one StretchBlt
-    for (int i = textureHeight; i < SCALE(DEFAULT_ITEM_HEIGHT); i += i) {
-        int h = i + i > SCALE(DEFAULT_ITEM_HEIGHT) 
-			? SCALE(DEFAULT_ITEM_HEIGHT) - i 
-			: i;
-        BitBlt(hdcCanvas, 0, i, nScreenWidth, h, hdcCanvas, 0, 0, SRCCOPY);
-    }
-}
-
-void DrawCanvasOn(HDC hdc, RECT rect) {
-	int canvasHeight = SCALE(SKIN_CANVAS_HEIGHT);
-    for (int i = rect.top; i < rect.bottom; i += canvasHeight) {
-		int h = i + canvasHeight > rect.bottom ? rect.bottom - i : canvasHeight;
-        BitBlt(hdc, rect.left, i, rect.right - rect.left, 
-            canvasHeight, hdcCanvas, 0, 0, SRCCOPY);
-    }
-}
-
 void CalculateHeights() {
-    ListHeight = ARRAYSIZE(Settings) * SCALE(DEFAULT_ITEM_HEIGHT);
+    ListHeight = ARRAYSIZE(Settings) * DefaultItemHeight;
     if (nExpandedIndex >= 0) {
         int tmp = rExpandedHeight;
         if (bTransitioning) {
@@ -1073,7 +1058,7 @@ void StartTransition(HWND hWnd, TransitionType tr, int duration) {
 void ExpandIt(HWND hWnd, int index) {
     nOptions = Settings[index].filler(SettingOptions, SettingValues[index]);
     nExpandedIndex = index;
-    rExpandedHeight = nOptions * SCALE(DEFAULT_ITEM_HEIGHT);
+    rExpandedHeight = DefaultItemHeight * nOptions;
     StartTransition(hWnd, ttExpand);
 }
 
@@ -1104,20 +1089,19 @@ HFONT BuildFont(int iFontSize, BOOL bBold, BOOL bItalic) {
 //
 
 void LoadSettings() {
-    TCHAR buffer[REGISTRY_MAXLENGTH];
-
     for (int i = 0; i < ARRAYSIZE(Settings); i++) {
-        LoadSetting(buffer, REGISTRY_MAXLENGTH, SZ_ICONTACT_REG_KEY,
-        Settings[i].key, Settings[i].def);
-
-        StringCchCopy(SettingValues[i], MAX_LOADSTRING, buffer);
+        StringCchCopy(SettingValues[i], MAX_LOADSTRING, 
+            pSettings->ini.GetValue(MAIN_SECTION, 
+            Settings[i].key, Settings[i].def));
     }
 }
 
 void SaveSettings() {
     for (int i = 0; i < ARRAYSIZE(Settings); i++) {
-        SaveSetting(SZ_ICONTACT_REG_KEY, SettingValues[i], Settings[i].key);
+        pSettings->ini.SetValue(MAIN_SECTION, 
+            Settings[i].key, SettingValues[i]);
     }
+    pSettings->Save();
 }
 
 void LoadDefaults() {
@@ -1134,17 +1118,16 @@ void LoadDefaults() {
 // generic setting handlers
 void DrawOnOff(HDC hdc, RECT rect, bool value) {
     SetTextAlign(hdc, TA_RIGHT | TA_BOTTOM);
-    SetTextColor(hdc, GetSkinRGB(SKIN_COLOR_LIST_ITEM_TEXT));
+    SetTextColor(hdc, pSettings->rgbListItemText);
 
-    int baseline = rect.bottom 
-		- SCALE(DEFAULT_ITEM_HEIGHT - ITEM_SECONDARY_FONT_SIZE) / 2;
+    int baseline = rect.bottom - (DefaultItemHeight - ItemSecondaryFontSize) / 2;
 
     const TCHAR * szOnOff = value ? SZ_ON : SZ_OFF;
 
     HFONT hfOld = (HFONT)SelectObject(hdc, SecondaryListFont);
 
-    ExtTextOut(hdc, rect.right - SCALE(LIST_ITEM_INDENT), baseline,
-        ETO_CLIPPED, &rect, szOnOff, _tcslen(szOnOff), NULL);
+    ExtTextOut(hdc, rect.right - ListItemIndent, baseline, ETO_CLIPPED, 
+        &rect, szOnOff, _tcslen(szOnOff), NULL);
 
     SelectObject(hdc, hfOld);
 }
@@ -1152,17 +1135,16 @@ void DrawOnOff(HDC hdc, RECT rect, bool value) {
 void DrawValue(HDC hdc, RECT rect, const TCHAR * value) {
     HFONT hfOld = (HFONT)SelectObject(hdc, SecondaryListFont);
     SetTextAlign(hdc, TA_RIGHT | TA_BOTTOM);
-    SetTextColor(hdc, GetSkinRGB(SKIN_COLOR_LIST_ITEM_TEXT));
-    int baseline = rect.bottom
-		- SCALE(DEFAULT_ITEM_HEIGHT - ITEM_SECONDARY_FONT_SIZE) / 2;
+    SetTextColor(hdc, pSettings->rgbListItemText);
+    int baseline = rect.bottom - (DefaultItemHeight - ItemSecondaryFontSize) / 2;
     
     if (0 == _tcslen(value)) {
-        ExtTextOut(hdc, rect.right - SCALE(LIST_ITEM_INDENT), baseline,
-			ETO_CLIPPED, &rect, SZ_AUTO, 4, NULL);
+        ExtTextOut(hdc, rect.right - ListItemIndent, baseline, ETO_CLIPPED, 
+            &rect, SZ_AUTO, 4, NULL);
     }
     else {
-        ExtTextOut(hdc, rect.right - SCALE(LIST_ITEM_INDENT), baseline,
-			ETO_CLIPPED, &rect, value, _tcslen(value), NULL);
+        ExtTextOut(hdc, rect.right - ListItemIndent, baseline, ETO_CLIPPED, 
+            &rect, value, _tcslen(value), NULL);
     }
     SelectObject(hdc, hfOld);
 }
@@ -1179,8 +1161,9 @@ int emailAccountFiller(TCHAR options[MAX_OPTIONS][MAX_LOADSTRING],
     SizedSPropTagArray (1, spta) = { 1, PR_DISPLAY_NAME };
     int index = 0;
    
-    StringCchPrintf(options[index], MAX_LOADSTRING, TEXT("%s ["), SZ_AUTO);
-    GetDefaultEmailAccount(options[index] + 2 + _tcslen(SZ_AUTO));
+    StringCchCopy(options[index], MAX_LOADSTRING, SZ_AUTO);
+    StringCchCat(options[index], MAX_LOADSTRING, TEXT(" ["));
+    GetDefaultEmailAccount(options[index] + 6);
     StringCchCat(options[index++], MAX_LOADSTRING, TEXT("]"));
 
     // Log onto MAPI
@@ -1225,72 +1208,97 @@ Error:
     return index;
 }
 
+// http://msdn.microsoft.com/en-us/library/bb446087.aspx
 int favoriteCategoryFiller(TCHAR options[MAX_OPTIONS][MAX_LOADSTRING],
                            TCHAR * value) {
-	HRESULT hr = E_FAIL;
-	CEOIDINFOEX info = {0};
 
-    CEGUID guid = {0};
-    CEOID oid = 0;
-    HANDLE hdb = NULL;
+    HRESULT           hr = E_FAIL;
+    IFolder    * pFolder = NULL;
+    IItem * pFolderIItem = NULL;
+    CEPROPVAL    * pVals = NULL;
+    ULONG       cbBuffer = 0;
+    int            index = 0;
 
-	int option_index = 0;
+    CEPROPID rgPropID = PIMPR_FOLDER_CATEGORIES;
 
-	// Default choice is AUTO [Favorites]
-	StringCchPrintf(options[option_index++], MAX_LOADSTRING, TEXT("%s [%s]"),
-		SZ_AUTO, pSettings->favorites_default);
+    _initPoom();
+    HANDLE hHeap = GetProcessHeap();
 
-	// Read Database
-    CeMountDBVolEx(&guid, DB_VOL_FN, NULL, OPEN_EXISTING);
+    // Get the IFolder object (Contacts, Contacts, Tasks).
+    hr = polApp->GetDefaultFolder(olFolderContacts, &pFolder);
+    CHR(hr);
 
-    hdb = CeOpenDatabaseInSession(NULL, &guid, &oid, CATEGORY_DB_NAME,
-		NULL, CEDB_AUTOINCREMENT, NULL);
+    // Get the IItem object representing a IFolder object.
+    hr = pFolder->QueryInterface(__uuidof(IItem), (LPVOID*)&pFolderIItem);
+    CHR(hr);
 
-	CBR(hdb != INVALID_HANDLE_VALUE);
+    // Get the list of categories.
+    hr = pFolderIItem->GetProps(&rgPropID, CEDB_ALLOWREALLOC, 1, &pVals, &cbBuffer, hHeap);
+    CHR(hr);
 
-	long lType = 0;
-	short iKey = 0;
-
-    CEPROPVAL * pRecord = NULL;
-	DWORD  dwBufSize = 0;
-    WORD   wNumProps;
-    for (WORD iRec = 0; iRec < MAX_OPTIONS; iRec++) {
-        oid = CeReadRecordPropsEx(hdb, CEDB_ALLOWREALLOC, &wNumProps, NULL,
-			(LPBYTE *)&pRecord, &dwBufSize, NULL);
-        if (!oid)
-            break;
-
-		for (WORD i = 0; i < wNumProps; i++) {
-			switch(pRecord[i].propid) {
-				case PROPID_CAT_NAME:
-					StringCchCopy(options[option_index++], MAX_LOADSTRING, pRecord[i].val.lpwstr);
-					break;
-			}
-		}
+    // Copy the list of categories for use outside of this function.
+    TCHAR * start = pVals->val.lpwstr;
+    TCHAR * end = start + _tcslen(pVals->val.lpwstr);
+    TCHAR * comma;
+    while (start < end) {
+        comma = _tcschr(start, ',');
+        if (comma == NULL) comma = end;
+        hr = StringCchCopyN(options[index++], MAX_LOADSTRING, start, comma - start);
+        CHR(hr);
+        start = comma + 2;
     }
 
 Error:
-	LocalFree(pRecord);
-    CloseHandle(hdb);
+    // Free resources.
+    HeapFree(hHeap, 0, pVals);
+    RELEASE_OBJ(pFolderIItem);
+    RELEASE_OBJ(pFolder);
 
-	return option_index;
+    return index;
+}
+
+HRESULT _initPoom() {
+    HRESULT hr;
+
+    if (polApp == NULL) {
+        hr = CoCreateInstance(__uuidof(Application), NULL, CLSCTX_INPROC_SERVER,
+                              __uuidof(IPOutlookApp2), (LPVOID*) &polApp);
+        CHR(hr);
+
+        hr = polApp->Logon(NULL);
+        CHR(hr);
+    }
+
+    hr = S_OK;
+
+Error:
+    if (FAILED(hr)) {
+        // If we failed to log on, don't keep the object around
+        RELEASE_OBJ(polApp);
+    }
+    return hr;
 }
 
 int skinFiller(TCHAR options[MAX_OPTIONS][MAX_LOADSTRING], TCHAR * value) {
-    TCHAR szSkinPath[MAX_PATH];
+    TCHAR szIniPath[MAX_PATH];
     WIN32_FIND_DATA findFileData;
     HANDLE handle;
     int index = 0;
     BOOL found = false;
 
-	GetCurDirFilename(szSkinPath, TEXT("*.png"));
-    handle = FindFirstFile(szSkinPath, &findFileData);
+    // Get program file path
+    ::GetModuleFileName(NULL, szIniPath, MAX_PATH);
 
+    TCHAR * pstr = _tcsrchr(szIniPath, '\\');
+	if (pstr) *(++pstr) = '\0';
+    StringCchCat(szIniPath, MAX_PATH, TEXT("*.skn"));
+
+    handle = FindFirstFile(szIniPath, &findFileData);
     if (handle != INVALID_HANDLE_VALUE) {
         do {
             StringCchCopy(options[index], MAX_LOADSTRING, findFileData.cFileName);
 
-            // remove extension ".png"
+            // remove ".lng"
             options[index][_tcslen(options[index])-4] = '\0';
 
             index++;
@@ -1307,15 +1315,20 @@ int skinFiller(TCHAR options[MAX_OPTIONS][MAX_LOADSTRING], TCHAR * value) {
 }
 
 int languageFiller(TCHAR options[MAX_OPTIONS][MAX_LOADSTRING], TCHAR * value) {
-    TCHAR szLngPath[MAX_PATH];
+    TCHAR szIniPath[MAX_PATH];
     WIN32_FIND_DATA findFileData;
     HANDLE handle;
     int index = 0;
     BOOL found = false;
 
-	GetCurDirFilename(szLngPath, TEXT("*.lng"));
-    handle = FindFirstFile(szLngPath, &findFileData);
+    // Get program file path
+    ::GetModuleFileName(NULL, szIniPath, MAX_PATH);
 
+    TCHAR * pstr = _tcsrchr(szIniPath, '\\');
+	if (pstr) *(++pstr) = '\0';
+    StringCchCat(szIniPath, MAX_PATH, TEXT("*.lng"));
+
+    handle = FindFirstFile(szIniPath, &findFileData);
     if (handle != INVALID_HANDLE_VALUE) {
         do {
             StringCchCopy(options[index], MAX_LOADSTRING, findFileData.cFileName);

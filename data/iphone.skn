@@ -1,0 +1,28 @@
+;iContact iPhone Lookalike skin
+;by Doug Melton - support@supware.net
+
+[theme]
+TitlebarBackground=e5e5e5
+TitlebarText=000000
+TitlebarSignal=369ce7
+TitlebarBattery=00b900
+TitlebarBatteryCharge=00ff00
+HeaderText=ffffff
+HeaderLoadingText=7f7f7f
+ListGroupBackground=a4b5bf
+ListGroupText=ffffff
+ListItemBackground=ffffff
+ListItemText=000000
+ListItemMissedText=ff0000
+ListItemFavoriteText=ff0000
+ListItemSelectedBackground1=4b5ab5
+ListItemSelectedBackground2=162793
+ListItemSelectedText=e6e6e6
+ListItemSelectedShadow=505050
+ListItemSeparator=e3e3e3
+DetailMainText=000000
+DetailMainShadow=e3e3e3
+DetailItemSeparator=999999
+KeyboardText=dcdcdc
+KeyboardBackground=464646
+KeyboardGrid=646464
