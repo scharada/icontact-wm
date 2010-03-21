@@ -1,0 +1,255 @@
+"DeployProject"
+{
+"VSVersion" = "3:701"
+"ProjectType" = "8:{AB322303-2255-48EF-A496-5904EB18DA55}"
+"IsWebType" = "8:FALSE"
+"ProjectName" = "8:iContactSetup"
+"LanguageId" = "3:1033"
+"CodePage" = "3:1252"
+"SccProjectName" = "8:"
+"SccLocalPath" = "8:"
+"SccAuxPath" = "8:"
+"SccProvider" = "8:"
+    "Hierarchy"
+    {
+        "Entry"
+        {
+        "MsmKey" = "8:_70F45E89D1AF4E7697F36B15AF895542"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+    }
+    "Configurations"
+    {
+        "Debug"
+        {
+        "DisplayName" = "8:Debug"
+        "IsDebugOnly" = "11:TRUE"
+        "IsReleaseOnly" = "11:FALSE"
+        "OutputFilename" = "8:Debug\\iContactSetup.cab"
+        "PackageFileSize" = "3:-2147483648"
+        "CabType" = "3:1"
+        "SignOutput" = "11:FALSE"
+        "CertificateHash" = "8:"
+        "TimeStampServer" = "8:"
+        }
+        "Release"
+        {
+        "DisplayName" = "8:Release"
+        "IsDebugOnly" = "11:FALSE"
+        "IsReleaseOnly" = "11:TRUE"
+        "OutputFilename" = "8:Release\\iContact.cab"
+        "PackageFileSize" = "3:-2147483648"
+        "CabType" = "3:1"
+        "SignOutput" = "11:FALSE"
+        "CertificateHash" = "8:"
+        "TimeStampServer" = "8:"
+        }
+    }
+    "Deployable"
+    {
+        "File"
+        {
+        }
+        "Folder"
+        {
+            "{D5B00AC1-E6C3-4CC5-90FF-8E0F53D9E5E0}:_21556AC0572C490981F786B2356F86D1"
+            {
+            "DefaultLocation" = "8:%InstallDir%"
+            "Name" = "8:#1920"
+            "Condition" = "8:"
+            "Property" = "8:%InstallDir%"
+                "Folders"
+                {
+                }
+            }
+            "{F6DFDB62-1DD1-498B-89B7-27BAC542EE5A}:_27ACBB8BC6D24A4EA5134BDAF179E66A"
+            {
+            "Name" = "8:#1919"
+            "Condition" = "8:"
+            "Property" = "8:%CE17%"
+                "Folders"
+                {
+                    "{5943FCFD-5B64-4EE4-96C9-4618EC95352A}:_37AC7B61FA614DFB803F09943286049D"
+                    {
+                    "Name" = "8:Programs"
+                    "Condition" = "8:"
+                    "Property" = "8:_7D71C43025E14394A82239ADBA245628"
+                        "Folders"
+                        {
+                        }
+                    }
+                }
+            }
+        }
+        "Product"
+        {
+        "Name" = "8:Microsoft Visual Studio"
+        "ProductName" = "8:iContact"
+        "Manufacturer" = "8:xda-developers"
+        "OSVersionMin" = "8:4.0"
+        "OSVersionMax" = "8:6.99"
+        "NoUninstall" = "11:FALSE"
+        "Compress" = "11:FALSE"
+        "CESetupDLL" = "8:"
+        }
+        "ProjectOutput"
+        {
+            "{605BE39E-5046-48BD-AEC0-63C3A46626D5}:_70F45E89D1AF4E7697F36B15AF895542"
+            {
+            "SourcePath" = "8:..\\iContact\\Pocket PC 2003 (ARMV4)\\Release\\iContact.exe"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_21556AC0572C490981F786B2356F86D1"
+            "Condition" = "8:"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "Register" = "3:0"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            "ProjectOutputGroupRegister" = "3:0"
+            "OutputConfiguration" = "8:"
+            "OutputGroupCanonicalName" = "8:Built"
+            "OutputProjectGuid" = "8:{0CB2FE85-F41A-438B-B631-2EA2851698D5}"
+            "ShowKeyOutput" = "11:TRUE"
+                "ExcludeFilters"
+                {
+                }
+            }
+        }
+        "Registry"
+        {
+            "HKLM"
+            {
+                "Keys"
+                {
+                    "{B1EBC968-6B66-4532-A885-748B79AF4477}:_5B7A768E5B4341C88421E93D0FB4CEBA"
+                    {
+                    "Name" = "8:Software"
+                    "Condition" = "8:"
+                        "Keys"
+                        {
+                            "{B1EBC968-6B66-4532-A885-748B79AF4477}:_FFAE64CF93D44341A6BF787EDF73D895"
+                            {
+                            "Name" = "8:Microsoft"
+                            "Condition" = "8:"
+                                "Keys"
+                                {
+                                    "{B1EBC968-6B66-4532-A885-748B79AF4477}:_FE9A6BD684194020ACACFF30BF357847"
+                                    {
+                                    "Name" = "8:Shell"
+                                    "Condition" = "8:"
+                                        "Keys"
+                                        {
+                                            "{B1EBC968-6B66-4532-A885-748B79AF4477}:_59A45E0E6D9245DF8EB15367E67A2636"
+                                            {
+                                            "Name" = "8:Rai"
+                                            "Condition" = "8:"
+                                                "Keys"
+                                                {
+                                                    "{B1EBC968-6B66-4532-A885-748B79AF4477}:_0FD3E3CC7ADD48CA9C56F125E0B0152D"
+                                                    {
+                                                    "Name" = "8::MSCONTACTS"
+                                                    "Condition" = "8:"
+                                                        "Keys"
+                                                        {
+                                                        }
+                                                        "Values"
+                                                        {
+                                                            "{C3684F64-58E2-4092-8E3C-D7483080DE5A}:_0CB9D1F4C3F24C4595E2C053B385A23D"
+                                                            {
+                                                            "Name" = "8:1"
+                                                            "Condition" = "8:"
+                                                            "ValueTypes" = "3:1"
+                                                            "Value" = "8:\"\"%InstallDir%\\iContact.exe\"\""
+                                                            }
+                                                            "{C3684F64-58E2-4092-8E3C-D7483080DE5A}:_B0A08C27EF144CA98050C689C88B2A27"
+                                                            {
+                                                            "Name" = "8:0"
+                                                            "Condition" = "8:"
+                                                            "ValueTypes" = "3:1"
+                                                            "Value" = "8:Contacts"
+                                                            }
+                                                            "{C3684F64-58E2-4092-8E3C-D7483080DE5A}:_C07D523E8B1D4444AE0876E0C7913FBE"
+                                                            {
+                                                            "Name" = "8:2"
+                                                            "Condition" = "8:"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:1"
+                                                            }
+                                                            "{C3684F64-58E2-4092-8E3C-D7483080DE5A}:_C2BDEBC8180F4D1685B4C18BA2F55DA4"
+                                                            {
+                                                            "Name" = "8:3"
+                                                            "Condition" = "8:"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                "Values"
+                                                {
+                                                }
+                                            }
+                                        }
+                                        "Values"
+                                        {
+                                        }
+                                    }
+                                }
+                                "Values"
+                                {
+                                }
+                            }
+                        }
+                        "Values"
+                        {
+                        }
+                    }
+                }
+            }
+            "HKCU"
+            {
+                "Keys"
+                {
+                }
+            }
+            "HKCR"
+            {
+                "Keys"
+                {
+                }
+            }
+            "HKU"
+            {
+                "Keys"
+                {
+                }
+            }
+            "HKPU"
+            {
+                "Keys"
+                {
+                }
+            }
+        }
+        "Shortcut"
+        {
+            "{971D45E9-E38C-49AC-B36E-4C5BEA533350}:_4CAAABE573454C17AFC7A3471142C6DD"
+            {
+            "Name" = "8:iContact"
+            "Arguments" = "8:"
+            "Description" = "8:"
+            "ShowCmd" = "3:1"
+            "Target" = "8:_70F45E89D1AF4E7697F36B15AF895542"
+            "Folder" = "8:_37AC7B61FA614DFB803F09943286049D"
+            "WorkingFolder" = "8:_21556AC0572C490981F786B2356F86D1"
+            }
+        }
+    }
+}

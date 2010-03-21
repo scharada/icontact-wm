@@ -1,0 +1,27 @@
+<application>
+  <name>iContact</name>
+  <version>0.76</version>
+  <description>
+    <![CDATA[<b>iContact</b><br />A new implementation of iContact by supbro building on the source code release by Larna, with aditional features including Full screen, and a top bar based on A_Cs S2 series.
+  <br />
+  <br />
+  Check http://www.supware.net/iContact for more info!
+  <br />
+  <br />
+  <b>Release Notes:</b><br/><br />
+  <b>0.76</b> - July 26, 2008
+  <ul>
+    <li>Added VGA Compatiblity!</li>
+    <li>Added company phone number (also added "company" to language file)</li>
+    <li>Now allows you to de-favorite a favorite from within the favorites details screen</li>
+    <li>Now allows you to click the keyboard popup from favorites or call details: will switch to all contacts first.</li>
+    <li>Fixed bug with newly favorited contacts not showing up as favorite in contacts list</li>
+    <li>Added wait cursor feedback for operations taking a long time</li>
+    <li>Added command line arguments: -favorites , -recents , -contacts , -dialer , -search</li>
+    <li>Removed "CategoriesField" from language, it's no longer needed</li>
+    <li>Added "Save to Contacts" in call log details screen (thanks [getlist]!)</li>
+  </ul>]]>
+  </description>
+  <versionurl>http://www.supware.net/iContact/net.supware.icontact.xml</versionurl>
+  <caburl>http://www.supware.net/iContact/iContact.cab</caburl>
+</application>

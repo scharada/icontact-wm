@@ -1,0 +1,41 @@
+;iContact English language file
+;by Doug Melton - support@supware.net
+
+[language]
+alphabet=ABCDEFGHIJKLMNOPQRSTUVWXYZ
+mobile=Mobile
+home=Home
+work=Work
+company=Company
+car=Car
+assistant=Assistant
+fax=Fax
+pager=Pager
+radio=Radio
+email=E-mail
+sms=SMS
+today=Today
+yesterday=Yesterday
+monday=Monday
+tuesday=Tuesday
+wednesday=Wednesday
+thursday=Thursday
+friday=Friday
+saturday=Saturday
+sunday=Sunday
+older=Older
+type=Type
+date=Date
+duration=Duration
+seconds=seconds
+outgoing=Outgoing Call
+missed=Missed Call
+incoming=Incoming Call
+unknown=Unknown
+returncall=Return Call
+savecontact=Save Contact
+showsummary=Show Summary
+editcontact=Edit Contact
+recents=Recents
+allcontacts=All Contacts
+details=Details

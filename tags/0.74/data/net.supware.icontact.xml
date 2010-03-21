@@ -1,0 +1,33 @@
+<application>
+  <name>iContact</name>
+  <version>0.74</version>
+  <description>
+    <![CDATA[<b>iContact</b><br />A new implementation of iContact by supbro building on the source code release by Larna, with aditional features including Full screen, and a top bar based on A_Cs S2 series.
+  <br />
+  <br />
+  Check http://www.supware.net/iContact for more info!
+  <br />
+  <br />
+  <b>Release Notes:</b><br/><br />
+  <b>0.74</b> - July 5, 2008
+  <ul>
+    <li>Added contact pictures!</li>
+    <li>Sped up program start time</li>
+    <li>Revamped contact details screen and call log details screen</li>
+    <li>Added button for contact summary, (and therefore ability to delete)</li>
+    <li>Added more contact details: fax, pager, car phone, radio phone, assistant phone, company phone, url</li>
+    <li>Added auto-detection of email account name</li>
+    <li>Added incoming/outgoing/missed indicator in call logs</li>
+    <li>Smoothen-ified scrolling for slower phones, thanks truburt!</li>
+    <li>Added link to "Outlook Contacts" to start menu, thanks l3v5y</li>
+    <li>Added seperate skin setting for battery, "TitlebarBattery"</li>
+    <li>Made dates and times obey the locale format</li>
+    <li>Added Header bar to program, and to skin</li>
+    <li>Fixed program exit when clicking empty space in contact details</li>
+    <li>Added more error handling code</li>
+    <li>Fixed startup error message that occurred on some WM6.0 phones</li>
+  </ul>]]>
+  </description>
+  <versionurl>http://www.supware.net/iContact/net.supware.icontact.xml</versionurl>
+  <caburl>http://www.supware.net/iContact/iContact.cab</caburl>
+</application>

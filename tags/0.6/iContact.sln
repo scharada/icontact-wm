@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iContact", "iContact\iContact.vcproj", "{0CB2FE85-F41A-438B-B631-2EA2851698D5}"
+EndProject
+Project("{B900F1C2-3D47-4FEC-85B3-04AAF18C3634}") = "iContactSetup", "iContactSetup\iContactSetup.vddproj", "{B0E8230A-15C1-493D-B042-3CFF3D5E21A3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Pocket PC 2003 (ARMV4) = Debug|Pocket PC 2003 (ARMV4)
+		Release|Pocket PC 2003 (ARMV4) = Release|Pocket PC 2003 (ARMV4)
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0CB2FE85-F41A-438B-B631-2EA2851698D5}.Debug|Pocket PC 2003 (ARMV4).ActiveCfg = Debug|Pocket PC 2003 (ARMV4)
+		{0CB2FE85-F41A-438B-B631-2EA2851698D5}.Debug|Pocket PC 2003 (ARMV4).Build.0 = Debug|Pocket PC 2003 (ARMV4)
+		{0CB2FE85-F41A-438B-B631-2EA2851698D5}.Debug|Pocket PC 2003 (ARMV4).Deploy.0 = Debug|Pocket PC 2003 (ARMV4)
+		{0CB2FE85-F41A-438B-B631-2EA2851698D5}.Release|Pocket PC 2003 (ARMV4).ActiveCfg = Release|Pocket PC 2003 (ARMV4)
+		{0CB2FE85-F41A-438B-B631-2EA2851698D5}.Release|Pocket PC 2003 (ARMV4).Build.0 = Release|Pocket PC 2003 (ARMV4)
+		{0CB2FE85-F41A-438B-B631-2EA2851698D5}.Release|Pocket PC 2003 (ARMV4).Deploy.0 = Release|Pocket PC 2003 (ARMV4)
+		{B0E8230A-15C1-493D-B042-3CFF3D5E21A3}.Debug|Pocket PC 2003 (ARMV4).ActiveCfg = Debug
+		{B0E8230A-15C1-493D-B042-3CFF3D5E21A3}.Release|Pocket PC 2003 (ARMV4).ActiveCfg = Release
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

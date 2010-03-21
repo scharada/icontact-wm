@@ -1,0 +1,30 @@
+<application>
+  <name>iContact</name>
+  <version>0.94</version>
+  <description>
+    <b>iContact</b><br />
+    iContact is an all-inclusive finger-friendly contact manager for Windows Mobile PocketPC phones. It's easily skinnable, intuitive, and replaces the standard Windows Mobile contact chooser.<br />
+    <br />
+    Check http://www.supware.net/iContact for more info!
+    <br />
+    <br />
+    <b>Release Notes:</b><br/><br />
+    <b>0.94</b> - May ??, 2009
+    <ul>
+      <li>[+] Added scrollbar</li>
+      <li>[+] Added "-details [oid]" command line option to jump straight to contact details</li>
+      <li>[+] Added "Create Shortcut" button to create start menu item</li>
+      <li>[+] Added "enableSensor" registry setting for touch sensor</li>
+      <li>[+] Reset Missed Call Count upon visiting -recents tab</li>
+      <li>[+] Added ability to jump to a letter using hardware keyboard</li>
+      <li>[#] Fixed bug with D-Pad + SMS</li>
+      <li>[#] Fixed clipping issue with contact names on QVGA screens</li>
+      <li>[#] Fixed bug that was forcing exit when service changed</li>
+      <li>[#] Used DeviceResolutionAware.h</li>
+      <li>[#] Fixed bug with keyboard popup on categories or details</li>
+      <li>[#] Fixed bug with Settings.exe not displaying more than 8 categories</li>
+    </ul>
+  </description>
+  <versionurl>http://www.supware.net/iContact/net.supware.icontact.xml</versionurl>
+  <caburl>http://www.supware.net/iContact/iContact.cab</caburl>
+</application>

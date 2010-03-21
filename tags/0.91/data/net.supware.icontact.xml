@@ -1,0 +1,23 @@
+<application>
+  <name>iContact</name>
+  <version>0.91</version>
+  <description>
+    <b>iContact</b><br />
+    iContact is an all-inclusive finger-friendly contact manager for Windows Mobile PocketPC phones. It's easily skinnable, intuitive, and replaces the standard Windows Mobile contact chooser.<br />
+    <br />
+    Check http://www.supware.net/iContact for more info!
+    <br />
+    <br />
+    <b>Release Notes:</b><br/><br />
+    <b>0.91</b> - February 7, 2009
+    <ul>
+      <li>Fixed version number in Settings</li>
+      <li>Fixed click region in titlebar</li>
+      <li>Added option to display standard windows titlebar (thanks allelimo)</li>
+      <li>Now works with NON-PHONE WM5.0 devices</li>
+      <li>Fixed some bugs with empty contact list</li>
+    </ul>
+  </description>
+  <versionurl>http://www.supware.net/iContact/net.supware.icontact.xml</versionurl>
+  <caburl>http://www.supware.net/iContact/iContact.cab</caburl>
+</application>

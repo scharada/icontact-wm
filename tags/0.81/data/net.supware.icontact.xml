@@ -1,0 +1,24 @@
+<application>
+  <name>iContact</name>
+  <version>0.81</version>
+  <description>
+    <![CDATA[<b>iContact</b><br />A new implementation of iContact by supbro building on the source code release by Larna, with aditional features including Full screen, and a top bar based on A_Cs S2 series.
+  <br />
+  <br />
+  Check http://www.supware.net/iContact for more info!
+  <br />
+  <br />
+  <b>Release Notes:</b><br/><br />
+  <b>0.81</b> - October 8, 2008
+  <ul>
+    <li>made "left" and "right" buttons work better with iDialer</li>
+    <li>made "Manage Contact" and "Edit Contact" return to details, and actions go back to list</li>
+    <li>made "dial" use iDialer, if it's installed</li>
+    <li>Fix weird bug with show summary, w/ default email account</li>
+    <li>Added long click in titlebar = exit program</li>
+    <li>Replaced Control Panel icon with a (hopefully, more stable) one</li>
+  </ul>]]>
+  </description>
+  <versionurl>http://www.supware.net/iContact/net.supware.icontact.xml</versionurl>
+  <caburl>http://www.supware.net/iContact/iContact.cab</caburl>
+</application>
