@@ -45,7 +45,7 @@
 				PreprocessorDefinitions="_DEBUG;_WIN32_WCE=$(CEVER);UNDER_CE;$(PLATFORMDEFINES);WINCE;DEBUG;_WINDOWS;$(ARCHFAM);$(_ARCHFAM_);_UNICODE;UNICODE;POCKETPC2003_UI_MODEL"
 				MinimalRebuild="true"
 				RuntimeLibrary="1"
-				UsePrecompiledHeader="0"
+				UsePrecompiledHeader="2"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -131,7 +131,7 @@
 				FavorSizeOrSpeed="2"
 				PreprocessorDefinitions="NDEBUG;_WIN32_WCE=$(CEVER);UNDER_CE;$(PLATFORMDEFINES);WINCE;_WINDOWS;$(ARCHFAM);$(_ARCHFAM_);_UNICODE;UNICODE;POCKETPC2003_UI_MODEL"
 				RuntimeLibrary="0"
-				UsePrecompiledHeader="0"
+				UsePrecompiledHeader="2"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -150,6 +150,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=" /subsystem:windowsce,5.01"
+				AdditionalDependencies="phone.lib cemapi.lib"
 				OutputFile="$(OutDir)/iContact.exe"
 				LinkIncremental="1"
 				DelayLoadDLLs="$(NOINHERIT)"
@@ -236,18 +237,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Sensor.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ShortcutUtils.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ShortcutUtilsData.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -322,19 +311,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Sensor.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ShortcutUtils.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ShortcutUtilsData.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Skin.h"
+				RelativePath=".\SimpleIni.h"
 				>
 			</File>
 			<File
@@ -343,10 +320,6 @@
 			</File>
 			<File
 				RelativePath=".\Titlebar.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Version.h"
 				>
 			</File>
 		</Filter>

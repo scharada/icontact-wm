@@ -20,10 +20,17 @@ along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 #include "FileUtils.h"
 #include "Macros.h"
 
+//#include <phone.h>
+//#include <cemapi.h>
+//#include <mapiutil.h>
+//#include <mapidefs.h>
 #include <pimstore.h>
+//#include <regext.h>
+//#include <snapi.h>
+#include <astdtapi.h>
 
-// dynamically loaded function
-typedef LONG (* TAPIREQUESTMAKECALL)(LPCTSTR, LPCTSTR, LPCTSTR, LPCTSTR);
+//#pragma comment( lib, "cemapi.lib" )
+#pragma comment( lib, "cellcore.lib" )
 
 #define MAX_COMMAND_LINE 200
 #define MAX_LOADSTRING 100
@@ -35,32 +42,13 @@ void Call(TCHAR * number, TCHAR * name) {
     PROCESS_INFORMATION pi;
     TCHAR szArguments[MAX_PATH];
 
-	HINSTANCE hiCellCoreDll;
-	TAPIREQUESTMAKECALL tapiRequestMakeCall;
-
     if (GetIDialerFilename(szFilename)) {
-		if (name != NULL && _tcslen(name) > 0)
-	        StringCchPrintf(szArguments, MAX_PATH, TEXT("%s -name=%s"), number, name);
-		else
-			StringCchCopy(szArguments, MAX_PATH, number);
-
+        StringCchPrintf(szArguments, MAX_PATH, TEXT("%s -name=%s"), number, name);
         CreateProcess(szFilename, szArguments,
             NULL, NULL, FALSE, NULL, NULL, NULL, NULL, &pi);
     }
     else {
-		hiCellCoreDll = LoadLibrary(TEXT("cellcore.dll"));
-		if (!hiCellCoreDll) {
-			// TODO: alert user?
-			return;
-		}
-
-		tapiRequestMakeCall = (TAPIREQUESTMAKECALL)GetProcAddress(
-			hiCellCoreDll, TEXT("tapiRequestMakeCallW"));
-
-		if (name != NULL && _tcslen(name) > 0)
-	        tapiRequestMakeCall(number, NULL, name, NULL);
-		else
-			tapiRequestMakeCall(number, NULL, number, NULL);
+        tapiRequestMakeCall(number, NULL, name, NULL);
     }
 }
 

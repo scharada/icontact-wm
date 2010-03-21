@@ -1,6 +1,6 @@
 <application>
   <name>iContact</name>
-  <version>0.95</version>
+  <version>0.9</version>
   <description>
     <b>iContact</b><br />
     iContact is an all-inclusive finger-friendly contact manager for Windows Mobile PocketPC phones. It's easily skinnable, intuitive, and replaces the standard Windows Mobile contact chooser.<br />
@@ -9,14 +9,22 @@
     <br />
     <br />
     <b>Release Notes:</b><br/><br />
-    <b>0.95</b> - September 29, 2009
+    <b>0.9</b> - January 10, 2009
     <ul>
-      <li>[+] Added "Remove Shortcut" button to details screen if appropriate</li>
-      <li>[+] Added "createshortcut" and "removeshortcut" to language file</li>
-      <li>[+] Added contact shortcut icons to start menu shortcuts for Windows Mobile 6.5</li>
-      <li>[+] Added ability for hardware "*" key to favorite/defavorite a contact</li>
-      <li>[#] Fixed outgoing calls to numbers with no name displaying [null]</li>
-      <li>[#] Hid SIP button being displayed by iContactAE</li>
+      <li>Reworked and greatly sped up list reload time</li>
+      <li>Added contact categories!</li>
+      <li>Better touch feedback (area touched is highlighted in blue)</li>
+      <li>Updated skin titlebar to match iDialer</li>
+      <li>Removed TitlebarBackground, TitlebarSignal, TitlebarText from .skn file, they're now calculated from the .png</li>
+      <li>Better integration with iDialer (now able to change iDialer service from iContact)</li>
+      <li>Fixed bug with incorrect call log details sometimes being displayed</li>
+      <li>Optimized graphics routines for faster, smoother scrolling</li>
+      <li>Fixed bug with Exit on Minimize sometimes not exiting</li>
+      <li>Fixed bug with settings icon in control panel</li>
+      <li>Fixed bug with scrolling: click once to stop scrolling, click again to open contact</li>
+      <li>Added "-add" command line option</li>
+      <li>Fixed called party name display when not used with iDialer</li>
+      <li>Added better iDialer detection if iContact and iDialer not installed on the same memory (thanks l3v5y)</li>
     </ul>
   </description>
   <versionurl>http://www.supware.net/iContact/net.supware.icontact.xml</versionurl>

@@ -26,6 +26,18 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_32C9466FBD924642AD1FEA61E602FBA3"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_58CCBFE244F14732A0FA04081944FE27"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_647EFA11DEDA4AD891E0CD36DE14372D"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -33,6 +45,12 @@
         "Entry"
         {
         "MsmKey" = "8:_69BB95C43B4140DDBEDD33449E536309"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_76B422B31E1240C4890B731B1D61EEDE"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -116,6 +134,42 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{BA458234-9B71-4F46-8107-E91156377184}:_32C9466FBD924642AD1FEA61E602FBA3"
+            {
+            "SourcePath" = "8:..\\data\\iphone.png"
+            "TargetName" = "8:iphone.png"
+            "Tag" = "8:"
+            "Folder" = "8:_21556AC0572C490981F786B2356F86D1"
+            "Condition" = "8:"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "Register" = "3:0"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{BA458234-9B71-4F46-8107-E91156377184}:_58CCBFE244F14732A0FA04081944FE27"
+            {
+            "SourcePath" = "8:..\\data\\default.skn"
+            "TargetName" = "8:default.skn"
+            "Tag" = "8:"
+            "Folder" = "8:_21556AC0572C490981F786B2356F86D1"
+            "Condition" = "8:"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "Register" = "3:0"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{BA458234-9B71-4F46-8107-E91156377184}:_647EFA11DEDA4AD891E0CD36DE14372D"
             {
             "SourcePath" = "8:..\\data\\net.supware.icontact.xml"
@@ -140,6 +194,24 @@
             "TargetName" = "8:Outlook Contacts.lnk"
             "Tag" = "8:"
             "Folder" = "8:_BCBFD52860BB4EF5A89A28F76F284C80"
+            "Condition" = "8:"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "Register" = "3:0"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{BA458234-9B71-4F46-8107-E91156377184}:_76B422B31E1240C4890B731B1D61EEDE"
+            {
+            "SourcePath" = "8:..\\data\\iphone.skn"
+            "TargetName" = "8:iphone.skn"
+            "Tag" = "8:"
+            "Folder" = "8:_21556AC0572C490981F786B2356F86D1"
             "Condition" = "8:"
             "Vital" = "11:TRUE"
             "ReadOnly" = "11:FALSE"
