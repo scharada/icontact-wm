@@ -72,6 +72,7 @@ int         scale = 1;
 RECT		rScreen = {0};
 int         nScreenHeight = 0;
 RECT        rTitlebar = {0};
+RECT        rServiceTitle = {0};
 RECT        rHeader = {0};
 RECT		rMenubar = {0};
 RECT		rList = {0};
@@ -349,9 +350,18 @@ HWND InitInstance (HINSTANCE hInstance, LPWSTR lpCmdLine, int nCmdShow){
     if (FAILED(CoInitializeEx(NULL, 0)))
         return 0;
 
-	// Initialize Callbacks for detecting tainted data
+    // Get the window title (possibly, from iDialer)
+    GetIDialerServiceName();
+    hasiDialerServices = HasMultipleIDialerServices();
+
+    // Initialize Callbacks for detecting tainted data
+    HRESULT hr = RegistryNotifyWindow(
+        HKEY_CURRENT_USER, IDIALER_REG_KEY, SERVICE_NUM, 
+        hWnd, WM_SETTINGS_TAINTED, SETTINGS_TAINTED_IDIALER,
+        NULL, &hrNotify[0]);
+
 	// Notify if skin changed (maybe from installing new skin .cab file)
-	HRESULT hr = RegistryNotifyWindow(
+	hr = RegistryNotifyWindow(
 		HKEY_CURRENT_USER, SZ_ICONTACT_REG_KEY, INI_SKIN_KEY,
 		hWnd, WM_SETTINGS_TAINTED, SETTINGS_TAINTED_SKIN,
 		NULL, &hrNotify[1]);
@@ -554,6 +564,7 @@ LRESULT DoPaintMain (HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam) {
         && (
             PtInRect(&rList, ptMouseDown)
             || PtInRect(&rHeader, ptMouseDown)
+            || PtInRect(&rServiceTitle, ptMouseDown) && hasiDialerServices
             || PtInRect(&rMenubar, ptMouseDown) 
                 && !Screens[History[depth].screen].hasMenus
             )
@@ -609,9 +620,6 @@ LRESULT DoActivate (HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam) {
 
 		MoveWindow(hWnd, rc.left, rc.top, rc.right-rc.left, 
 			rc.bottom-rc.top, TRUE);
-
-		SipShowIM(SIPF_OFF);
-		ShowWindow(FindWindow(L"MS_SIPBUTTON", NULL), SW_HIDE);
 
         nHighlightedTab = nCurrentTab;
         bMouseDown = false;
@@ -671,6 +679,11 @@ LRESULT DoTitlebarCallback (HWND hWnd, UINT wMsg, WPARAM wParam,
 //
 LRESULT DoSettingsTaintedCallback (HWND hWnd, UINT wMsg, WPARAM wParam,
                     LPARAM lParam) {
+
+    if (lParam & SETTINGS_TAINTED_IDIALER) {
+        GetIDialerServiceName();
+        InvalidateRect(hWnd, &rTitlebar, false);
+    }
 
 	// if the skin or the language changed, we'll have to restart
 	// restarting is not absolutely necessary, but it's easiest
@@ -982,6 +995,21 @@ LRESULT DoMouseUp (HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam) {
         }
     }
 
+
+    // They scrolled the screen up too far
+    else if (bDragging && History[depth].scrolled < minScrolled) {
+        bDragging = false;
+        ScrollTo(hWnd, minScrolled);
+    }
+
+
+    // They scrolled the screen down too far
+    else if (bDragging && History[depth].scrolled > maxScrolled) {
+        bDragging = false;
+        ScrollTo(hWnd, maxScrolled);
+    }
+
+
     // now we're scrolling
     else if (bDragging) {
         // First scroll right away!
@@ -1021,6 +1049,14 @@ LRESULT DoMouseUp (HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam) {
         PostMessage(hWnd, WM_COMMAND, CMD_FAVORITE, NULL);
     }
 
+    // They clicked the service name (to change iDialer service)
+    else if (hasiDialerServices &&
+        PtInRect(&rServiceTitle, ptMouseDown) 
+        && PtInRect(&rServiceTitle, pt)) {
+        // change the service
+        PostMessage(hWnd, WM_COMMAND, CMD_CHANGE_SERVICE, NULL);
+    }
+
     // They clicked in the titlebar
     // no matter what the screen type is
 	else if (PtInRect(&rTitlebar, ptMouseDown) && PtInRect(&rTitlebar, pt)) {
@@ -1048,9 +1084,7 @@ LRESULT DoTimer (HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam) {
     DWORD t = ::GetTickCount();
     DWORD dt = 0;
     double s = 0.0;
-	double dv = 0.0;
     RECT * pr;
-	bool done = false;
 
 	switch (wParam)	{
 
@@ -1061,48 +1095,37 @@ LRESULT DoTimer (HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam) {
             dt = t - tEndTime;
 
             // Velocity
+            if (History[depth].scrolled < minScrolled)
+                Velocity = (double)(History[depth].scrolled - minScrolled) / 2 / dt;
+            else if (History[depth].scrolled > maxScrolled)
+                Velocity = (double)(History[depth].scrolled - maxScrolled) / 2 / dt;
+            else {
+                double dv = Velocity * FRICTION_COEFF * dt;
+                if (fabs(dv) > fabs(Velocity)) 
+                    Velocity = 0;
+                else 
+			        Velocity = Velocity - dv;
 
-			// apply friction force
-            dv = -Velocity * FRICTION_COEFF * dt;
-            if (fabs(dv) > fabs(Velocity)) 
-                Velocity = 0;
-            else 
-		        Velocity = Velocity + dv;
-
-			// apply spring force if beyond the end of the list
-			// Fs = -k(x-x0)
-			// we're assuming dt is very small, so we can estimate the integral
-			// with a rectangular window (with width dt)
-			if (History[depth].scrolled < minScrolled) {
-                Velocity += -SPRING_CONSTANT * (double)(minScrolled - History[depth].scrolled) * dt;
-			}
-			else if (History[depth].scrolled > maxScrolled) {
-                Velocity += -SPRING_CONSTANT * (double)(maxScrolled - History[depth].scrolled) * dt;
-			}
+				// Gravity
+				if (bGScrolling) {
+					SENSORDATA sd;
+					SensorGesturePoll(&sd);
+					int sign = sd.AngleY < iInitialAngle ? -1 : 1;
+					int dangle = abs(sd.AngleY - iInitialAngle);
+					double radians = dangle * 3.141592654 / 180.0;
+					Velocity += sin(radians) * pSettings->gravity * sign;
+				}
+            }
 
             // Displacement
             s = Velocity * dt;
-			// special handling for end-of-list conditions
-			// If springing back from beyond the bottom of the list,
-			// don't go back past the bottom.
-			if (History[depth].scrolled < minScrolled) {
-				if (Velocity < 0 && s < History[depth].scrolled - minScrolled) {
-					s = History[depth].scrolled - minScrolled;
-					done = true;
-				}
-			}
-			else if (History[depth].scrolled > maxScrolled) {
-				if (Velocity > 0 && s > History[depth].scrolled - maxScrolled) {
-					s = History[depth].scrolled - maxScrolled;
-					done = true;
-				}
-			}
-			else {
-				done = (int)s == 0;
-			}
+            if (s < 0 && s > -1 && History[depth].scrolled < minScrolled)
+                s = -1;
+            else if (s > 0 && s < 1 && History[depth].scrolled > maxScrolled)
+                s = 1;
             
             // We're done scrolling
-            if (done && !bGScrolling) {
+            if ((int)s == 0 && !bGScrolling) {
                 KillTimer(hWnd, IDT_TIMER_SCROLL);
 		        bScrolling = false;
 		        Velocity = 0;
@@ -1270,11 +1293,8 @@ LRESULT DoKeyDown (HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam) {
 
         case VK_TTALK:
             PostMessage(hWnd, WM_COMMAND, CMD_GREEN_BUTTON, NULL);
+            return 0;
             break;
-
-		case VK_TSTAR:
-			PostMessage(hWnd, WM_COMMAND, CMD_FAVORITE, NULL);
-			break;
 
         default:
             // Jump to this key in the alphabet
@@ -1489,7 +1509,7 @@ LRESULT DoCommand (HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam) {
 
             if (SUCCEEDED(hr)) {
                 // "back"
-                if (newScreen == NEWSCREEN_BACK) {
+                if (newScreen == -1) {
                     if (pSettings->doExitOnAction) {
                         DestroyWindow(hWnd);
                     }
@@ -1499,7 +1519,7 @@ LRESULT DoCommand (HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam) {
                 }
 
                 // action is done, get outta here
-                else if (newScreen == NEWSCREEN_EXIT) {
+                else if (newScreen == -2) {
                     if (pSettings->doExitOnAction) {
                         DestroyWindow(hWnd);
                     }
@@ -1511,7 +1531,7 @@ LRESULT DoCommand (HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam) {
                 // "back" but upon deactivation
                 // this is used in conjunction with CreateProcess
                 // to avoid funky back action before the new window shows up
-                else if (newScreen == NEWSCREEN_BACK_ON_DEACTIVATE) {
+                else if (newScreen == -3) {
                     bBackOnDeactivate = true;
                 }
 
@@ -1610,6 +1630,10 @@ LRESULT DoCommand (HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam) {
 
             break;
 
+        case CMD_CHANGE_SERVICE:
+            NextIDialerService();
+            break;
+
         case CMD_GREEN_BUTTON:
             // TODO: dial currently selected number...?
             RunDialer();
@@ -1679,7 +1703,7 @@ void DrawScreenOn(HDC hdc, RECT rClip, HDC hdcTmp, int yListOffset) {
     // TITLE BAR
     IntersectRect(&rect, &rTitlebar, &rClip);
     if (!IsRectEmpty(&rect))
-	    DrawTitlebarOn(hdc, rTitlebar, hdcSkin, TitlebarFont, SZ_APP_NAME);
+	    DrawTitlebarOn(hdc, rTitlebar, hdcSkin, TitlebarFont, szWindowTitle);
 
     // HEADER BAR
     IntersectRect(&rect, &rHeader, &rClip);
@@ -2016,7 +2040,6 @@ void DrawItemBackgroundOn(HDC hdc, DataItemType diType, RECT rect, RECT rClip) {
         case diEditButton:
         case diSaveContactButton:
         case diCreateShortcutButton:
-		case diRemoveShortcutButton:
             // Draw the canvas
 			DrawCanvasOn(hdc, rIntersect);
 
@@ -2209,7 +2232,6 @@ void DrawItemOn(HDC hdc, DataItem dItem, RECT rItem) {
         case diEditButton:
         case diSaveContactButton:
         case diCreateShortcutButton:
-		case diRemoveShortcutButton:
             // Display the button text
             SelectObject(hdc, PrimaryListFont);
             SetTextAlign(hdc, TA_CENTER);
@@ -2372,10 +2394,17 @@ void InitSurface(HWND hWnd) {
 	rTitlebar = rScreen;
 	if (pSettings->doShowFullScreen) {
 		rTitlebar.bottom = rTitlebar.top + SCALE(TITLE_BAR_HEIGHT);
+
+		// Location of the name of the service
+		rServiceTitle = rTitlebar;
+		rServiceTitle.bottom *= 2;
+		rServiceTitle.left += SCALE(SIGNAL_WIDTH);
+		rServiceTitle.right = rServiceTitle.right / 2 - SCALE(SIGNAL_WIDTH);
 	}
 	else {
 		// collapse new titlebar so it is not active
 		rTitlebar.bottom = rTitlebar.top;
+		rServiceTitle = rTitlebar;
 	}
 
     // Header, with the "back" button, the "favorite" button, etc.
@@ -2779,6 +2808,11 @@ void CalculateClickRegion(POINT p) {
         rClickRegion.left = rList.right - SCALE(HEADER_CLICK_HEIGHT);
         rClickRegion.right = rList.right;
     }
+    
+    // They clicked the service title
+    else if (PtInRect(&rServiceTitle, p) && hasiDialerServices) {
+        rClickRegion = rServiceTitle;
+	}
 
     // They clicked in the titlebar
     // no matter what the screen type is
@@ -2823,4 +2857,60 @@ void CalculateClickRegion(POINT p) {
 NONCLICKABLE:
     rClickRegion.top = -1;
     rClickRegion.bottom = -1;
+}
+
+void GetIDialerServiceName() {
+    TCHAR value[128] = {0};
+    TCHAR key[32] = {0};
+
+    LoadSetting(value, 128, IDIALER_REG_KEY, SERVICE_NUM, NULL);
+
+    if (value[0] == 0) {
+        // no iDialer setting found
+        szWindowTitle[0] = 0;
+        return;
+    }
+
+    int nService = _wtoi(value);
+
+    StringCchPrintf(key, 32, SERVICE_TITLE_FORMAT, nService + 1);
+    LoadSetting(value, 64, IDIALER_REG_KEY, key);
+    StringCchCopy(szWindowTitle, 64, value);
+}
+
+void NextIDialerService() {
+    TCHAR value[128] = {0};
+    TCHAR key[32] = {0};
+
+    LoadSetting(value, 128, IDIALER_REG_KEY, SERVICE_NUM, NULL);
+
+    if (value[0] == 0) {
+        // no iDialer setting found
+        szWindowTitle[0] = 0;
+        return;
+    }
+
+    // +1 because we want the next one
+    int nService = _wtoi(value) + 1;
+
+    StringCchPrintf(key, 32, SERVICE_TYPE_FORMAT, nService + 1);
+    LoadSetting(value, 64, IDIALER_REG_KEY, key);
+
+    // the next service doesn't exist, so drop down to 1
+    if (value[0] == 0)
+        nService = 0;
+
+    StringCchPrintf(value, 128, TEXT("%d"), nService);
+    SaveSetting(IDIALER_REG_KEY, value, SERVICE_NUM);
+}
+
+bool HasMultipleIDialerServices() {
+    TCHAR value[128] = {0};
+    TCHAR key[32] = {0};
+
+    // If "service2type" exists, then we know they have > 1 iDialer services
+    StringCchPrintf(key, 32, SERVICE_TYPE_FORMAT, 2);
+    LoadSetting(value, 128, IDIALER_REG_KEY, key, NULL);
+
+    return value[0] != 0;
 }

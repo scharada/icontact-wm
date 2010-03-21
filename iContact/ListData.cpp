@@ -172,8 +172,7 @@ bool CanSelectItem(int index) {
         || t == diCallButton
         || t == diSmsButton
         || t == diSaveContactButton
-        || t == diCreateShortcutButton
-		|| t == diRemoveShortcutButton;
+        || t == diCreateShortcutButton;
 }
 
 DataItem SelectItem(int index) {

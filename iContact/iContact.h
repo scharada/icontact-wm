@@ -29,6 +29,11 @@ along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 // Registry defines and data types
 //
 
+#define IDIALER_REG_KEY             TEXT("Software\\Supware.net\\iDialer")
+#define SERVICE_NUM                 TEXT("service")
+#define SERVICE_TITLE_FORMAT        TEXT("service%dtitle")
+#define SERVICE_TYPE_FORMAT         TEXT("service%dtype")
+
 #define MISSED_CALL_COUNT_REG_KEY   TEXT("System\\State\\Phone")
 #define MISSED_CALL_COUNT_NAME      TEXT("Missed Call Count")
 
@@ -38,6 +43,7 @@ along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 
 #define WM_SETTINGS_TAINTED         WM_APP + 2
 
+#define SETTINGS_TAINTED_IDIALER    0x01
 #define SETTINGS_TAINTED_SKIN		0x02
 #define SETTINGS_TAINTED_LANGUAGE	0x04
 
@@ -57,6 +63,7 @@ along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 #define CMD_ADD                     0x17
 #define CMD_FAVORITE                0x18
 #define CMD_JUMP_TO                 0x19
+#define CMD_CHANGE_SERVICE          0x30
 #define CMD_GREEN_BUTTON            0x100
 #define CMD_RED_BUTTON              0x101
 
@@ -82,7 +89,6 @@ along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 
 #define	REFRESH_RATE                11
 #define FRICTION_COEFF              0.001
-#define SPRING_CONSTANT				0.0002
 
 //----------------------------------------------------------------------
 // Graphics defines and data types
@@ -164,3 +170,7 @@ void ScrollTo (HWND, int, int = SCROLL_TO_PERIOD);
 void StartTransition(HWND, TransitionType, int = TRANSITION_PERIOD);
 bool ParseCommandLine(HWND, LPTSTR);
 void CalculateClickRegion(POINT p);
+
+void GetIDialerServiceName();
+void NextIDialerService();
+bool HasMultipleIDialerServices();

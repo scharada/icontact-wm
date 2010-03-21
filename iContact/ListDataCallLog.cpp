@@ -805,17 +805,17 @@ HRESULT RecentDetailsClick(DataItem * data, float x, int * newScreen,
     switch (data->type) {
         case diCallButton:
             Call(pEntry->pszNumber, pEntry->pszName);
-            *newScreen = NEWSCREEN_BACK_ON_DEACTIVATE;
+            *newScreen = -3;
             break;
 
         case diSmsButton:
             SendSMS(pEntry->pszNumber, pEntry->pszName);
-            *newScreen = NEWSCREEN_BACK_ON_DEACTIVATE;
+            *newScreen = -3;
             break;
 
         case diSaveContactButton:
             AddContactByNumber(pEntry->pszNumber);
-            *newScreen = NEWSCREEN_BACK;
+            *newScreen = -1;
             break;
     }
 

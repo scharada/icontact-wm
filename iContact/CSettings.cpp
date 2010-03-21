@@ -123,8 +123,6 @@ CSettings::CSettings(void) {
         &this->allcontacts_string, TEXT("allcontacts="), TEXT("All Contacts"),
         &this->details_string, TEXT("details="), TEXT("Details"),
         &this->categories_string, TEXT("categories="), TEXT("Categories"),
-		&this->createshortcut_string, TEXT("createshortcut="), TEXT("Create Shortcut"),
-		&this->removeshortcut_string, TEXT("removeshortcut="), TEXT("Remove Shortcut")
     };
 
 	// Read the file into this->language_data TCHAR array

@@ -121,44 +121,22 @@ static bool CreateShellLink(const TCHAR * szLinkPath,
     return success;
 }
 
-BOOL CreateShortcutFile(const TCHAR * szShortcutTitle,
+bool CreateShortcutFile(const TCHAR * szShortcutTitle,
                         const TCHAR * szObjectPath,
                         const TCHAR * szArguments,
                         const TCHAR * szIconPath) {
 
-    TCHAR szShortcutPath[MAX_PATH] = {0};
-	BOOL fileExists = GetShortcutFilename(szShortcutPath, szShortcutTitle);
-
-    // Return immediately if shortcut already exists
-	// or path is unknown.
-	if (fileExists || 0 == _tcslen(szShortcutPath))
-		return false;
-
-    return CreateShellLink(szShortcutPath, szIconPath, szObjectPath, szArguments);
-}
-
-BOOL RemoveShortcutFile(const TCHAR * szShortcutTitle) {
-    TCHAR szShortcutPath[MAX_PATH] = {0};
-	BOOL fileExists = GetShortcutFilename(szShortcutPath, szShortcutTitle);
-
-    // Return immediately if shortcut does not exist
-	if (!fileExists)
-		return false;
-
-	return DeleteFile(szShortcutPath);
-}
-
-// Finds the name to the shortcut file, and as a side effect 
-// returns whether the file exists.
-BOOL GetShortcutFilename(TCHAR * szShortcutPath, 
-						 const TCHAR * szShortcutTitle) {
-
-    if (!SHGetSpecialFolderPath(NULL, szShortcutPath, CSIDL_PROGRAMS, FALSE))
+    TCHAR szLinkPath[MAX_PATH] = {0};
+    if (!SHGetSpecialFolderPath(NULL, szLinkPath, CSIDL_PROGRAMS, FALSE))
         return false;
 
-    StringCchCat(szShortcutPath, MAX_PATH, TEXT("\\"));
-    StringCchCat(szShortcutPath, MAX_PATH, szShortcutTitle);
-    StringCchCat(szShortcutPath, MAX_PATH, TEXT(".lnk"));	
+    StringCchCat(szLinkPath, MAX_PATH, TEXT("\\"));
+    StringCchCat(szLinkPath, MAX_PATH, szShortcutTitle);
+    StringCchCat(szLinkPath, MAX_PATH, TEXT(".lnk"));
 
-    return FileExists(szShortcutPath);
+    // Return immediately if shortcut already exists.
+    if (FileExists(szLinkPath))
+        return true;
+
+    return CreateShellLink(szLinkPath, szIconPath, szObjectPath, szArguments);
 }

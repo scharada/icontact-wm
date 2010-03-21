@@ -108,6 +108,4 @@ public:
     const TCHAR * allcontacts_string;
     const TCHAR * details_string;
     const TCHAR * categories_string;
-	const TCHAR * createshortcut_string;
-	const TCHAR * removeshortcut_string;
 };

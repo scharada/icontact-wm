@@ -1,6 +1,6 @@
 <application>
   <name>iContact</name>
-  <version>0.95</version>
+  <version>0.94</version>
   <description>
     <b>iContact</b><br />
     iContact is an all-inclusive finger-friendly contact manager for Windows Mobile PocketPC phones. It's easily skinnable, intuitive, and replaces the standard Windows Mobile contact chooser.<br />
@@ -9,14 +9,20 @@
     <br />
     <br />
     <b>Release Notes:</b><br/><br />
-    <b>0.95</b> - September 29, 2009
+    <b>0.94</b> - May ??, 2009
     <ul>
-      <li>[+] Added "Remove Shortcut" button to details screen if appropriate</li>
-      <li>[+] Added "createshortcut" and "removeshortcut" to language file</li>
-      <li>[+] Added contact shortcut icons to start menu shortcuts for Windows Mobile 6.5</li>
-      <li>[+] Added ability for hardware "*" key to favorite/defavorite a contact</li>
-      <li>[#] Fixed outgoing calls to numbers with no name displaying [null]</li>
-      <li>[#] Hid SIP button being displayed by iContactAE</li>
+      <li>[+] Added scrollbar</li>
+      <li>[+] Added "-details [oid]" command line option to jump straight to contact details</li>
+      <li>[+] Added "Create Shortcut" button to create start menu item</li>
+      <li>[+] Added "enableSensor" registry setting for touch sensor</li>
+      <li>[+] Reset Missed Call Count upon visiting -recents tab</li>
+      <li>[+] Added ability to jump to a letter using hardware keyboard</li>
+      <li>[#] Fixed bug with D-Pad + SMS</li>
+      <li>[#] Fixed clipping issue with contact names on QVGA screens</li>
+      <li>[#] Fixed bug that was forcing exit when service changed</li>
+      <li>[#] Used DeviceResolutionAware.h</li>
+      <li>[#] Fixed bug with keyboard popup on categories or details</li>
+      <li>[#] Fixed bug with Settings.exe not displaying more than 8 categories</li>
     </ul>
   </description>
   <versionurl>http://www.supware.net/iContact/net.supware.icontact.xml</versionurl>
