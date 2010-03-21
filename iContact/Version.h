@@ -15,4 +15,4 @@ You should have received a copy of the GNU General Public License
 along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************/
 
-#define SZ_ABOUT TEXT("iContact v0.95 - supware.net")
+#define SZ_ABOUT TEXT("iContact v0.93 - supware.net")

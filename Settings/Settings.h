@@ -132,8 +132,8 @@ void InitializeSkin(HDC hdc);
 void InitializeCanvas();
 
 void DrawCanvasOn(HDC hdc, RECT rect);
-void DrawScreenOn(HDC, RECT);
-void DrawListDetailsOn(HDC hdc, RECT rect, RECT rClip, const TCHAR * value);
+void DrawScreenOn(HDC, HDC, RECT);
+void DrawListDetailsOn(HDC hdc, RECT rItem, const TCHAR * value);
 void DrawRect(HDC hdc, LPRECT prc, COLORREF clr);
 
 void ScrollBar(int);

@@ -48,7 +48,6 @@ POINT       ptMouseDown = { -1, -1 };
 int         nTouchRadius = 4;
 
 // Graphic
-int         scale = 1;
 RECT		rScreen = {0};
 RECT        rTitlebar = {0};
 RECT        rContent = {0};
@@ -69,6 +68,10 @@ int         nOptions;
 // Pocket Outlook (POOM)
 //IPOutlookApp2 * polApp = NULL;
 
+// UI Element Sizes. These can't be static because
+// of different DPI devices
+int         vga = 1; // 1 = qvga, 2 = vga
+
 // Fonts
 HFONT       TitlebarFont;
 HFONT		PrimaryListFont;
@@ -77,6 +80,8 @@ HFONT		SecondaryListFont;
 // Screen buffers
 HDC         hdcMem = NULL;
 HBITMAP		hbmMem = NULL;
+HDC         hdcTmp = NULL;
+HBITMAP		hbmTmp = NULL;
 HDC			hdcSkin = NULL;
 HBITMAP		hbmSkin = NULL;
 HDC         hdcPage1 = NULL;
@@ -263,15 +268,15 @@ HWND InitInstance (HINSTANCE hInstance, LPWSTR lpCmdLine, int nCmdShow){
     // Additional initialization
     //_initPoom();
 
-    // Setup scaling. DPI must be an integer multiple of DEFAULT_DPI
-    // in order for everything to work correctly.
-    scale = int(DRA::LogPixelsX() / DEFAULT_DPI);
+    // Perform DPI adjustments
     HDC hdc = GetDC(hWnd);
+	int res = min(::GetDeviceCaps(hdc, HORZRES), ::GetDeviceCaps(hdc, VERTRES));
+    vga = MulDiv(vga, res, DEFAULT_SCREEN_WIDTH);
 
     // Create fonts
-    TitlebarFont = BuildFont(SCALE(TITLEBAR_FONT_SIZE), FALSE, FALSE);
-	PrimaryListFont = BuildFont(SCALE(ITEM_FONT_SIZE), FALSE, FALSE);
-	SecondaryListFont = BuildFont(SCALE(ITEM_SECONDARY_FONT_SIZE), TRUE, FALSE);
+    TitlebarFont = BuildFont(TITLEBAR_FONT_SIZE * vga, FALSE, FALSE);
+	PrimaryListFont = BuildFont(ITEM_FONT_SIZE * vga, FALSE, FALSE);
+	SecondaryListFont = BuildFont(ITEM_SECONDARY_FONT_SIZE * vga, TRUE, FALSE);
 
     // Create data lists
     pSettings = new CSettings();
@@ -343,7 +348,7 @@ LRESULT DoPaintMain (HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam) {
     rect = ps.rcPaint;
 
     // draw the screen...
-    DrawScreenOn(hdcMem, rect);
+    DrawScreenOn(hdcMem, hdcTmp, rect);
 
     // Transfer everything to the actual screen
     BitBlt(hdc, rect.left, rect.top, rect.right - rect.left,
@@ -545,28 +550,27 @@ LRESULT DoMouseUp (HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam) {
         int index = -1;
 
         // They clicked above the expanded part
-        if (y / SCALE(DEFAULT_ITEM_HEIGHT) <= nExpandedIndex) {
-            index = y / SCALE(DEFAULT_ITEM_HEIGHT);
+        if (y / DEFAULT_ITEM_HEIGHT / vga <= nExpandedIndex) {
+            index = y / DEFAULT_ITEM_HEIGHT / vga;
         }
 
         // They clicked below the expanded part
-        else if ((y - rExpandedHeight) / SCALE(DEFAULT_ITEM_HEIGHT) > nExpandedIndex) {
-            index = (y - rExpandedHeight) / SCALE(DEFAULT_ITEM_HEIGHT);
+        else if ((y - rExpandedHeight) / DEFAULT_ITEM_HEIGHT / vga > nExpandedIndex) {
+            index = (y - rExpandedHeight) / DEFAULT_ITEM_HEIGHT / vga;
         }
 
         // They clicked on the expanded part
         if (index == -1) {
             switch (Settings[nExpandedIndex].type) {
                 case stList:
-                    index = (y - (SCALE(DEFAULT_ITEM_HEIGHT) * nExpandedIndex)) 
-                        / SCALE(DEFAULT_ITEM_HEIGHT) - 1;
+                    index = (y - (DEFAULT_ITEM_HEIGHT * vga * nExpandedIndex)) 
+                        / DEFAULT_ITEM_HEIGHT / vga - 1;
                     
                     // They clicked "download more skins"
                     if (0 == _tcscmp(SettingOptions[index], 
                         SZ_DOWNLOAD_SKINS)) {
-                        // SCALEX(1) will be 1 for QVGA, 2 for VGA
 						StringCchPrintf(szUrl, MAX_PATH, TEXT("%s&vga=%d"),
-                            URL_DOWNLOAD_SKINS, SCALE(1));
+							URL_DOWNLOAD_SKINS, vga);
                         OpenURL(szUrl);
                     }
                     
@@ -766,7 +770,7 @@ LRESULT DoDestroyMain (HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam) {
 //-----------------------------------------------------------------------------
 // Screen Drawing Functions
 //
-void DrawScreenOn(HDC hdc, RECT rClip) {
+void DrawScreenOn(HDC hdc, HDC hdcTmp, RECT rClip) {
 
     RECT rItem;
     rItem.bottom = rContent.top - Scrolled;
@@ -775,6 +779,7 @@ void DrawScreenOn(HDC hdc, RECT rClip) {
     rTouchZone.bottom = rTouchZone.top = 0;
 
     SetBkMode(hdc, TRANSPARENT);
+    SetBkMode(hdcTmp, TRANSPARENT);
 
 	// ******* DRAW LIST BACKGROUND
 	DrawCanvasOn(hdc, rContent);
@@ -796,21 +801,21 @@ void DrawScreenOn(HDC hdc, RECT rClip) {
 
         // calculate rItem
         rItem.top = rItem.bottom;
-        rItem.bottom = rItem.top + SCALE(DEFAULT_ITEM_HEIGHT);
+        rItem.bottom = rItem.top + DEFAULT_ITEM_HEIGHT * vga;
         rItem.left = rContent.left;
         rItem.right = rContent.right;
 		DrawRect(hdc, &rItem, GetSkinRGB(SKIN_COLOR_LIST_ITEM_BACKGROUND));
-        int baseline = rItem.bottom - (SCALE(DEFAULT_ITEM_HEIGHT - ITEM_FONT_SIZE) / 2);
+        int baseline = rItem.bottom - ((DEFAULT_ITEM_HEIGHT - ITEM_FONT_SIZE) * vga / 2);
 
         // draw separator
         RECT rSep = rItem;
-        rSep.top = rItem.bottom - SCALE(LIST_SEPARATOR_HEIGHT);
+        rSep.top = rItem.bottom - LIST_SEPARATOR_HEIGHT * vga;
         DrawRect(hdc, &rSep, GetSkinRGB(SKIN_COLOR_LIST_ITEM_SEPARATOR));
       
         // draw caption
         SetTextAlign(hdc, TA_LEFT | TA_BOTTOM);
         SetTextColor(hdc, GetSkinRGB(SKIN_COLOR_LIST_ITEM_TEXT));
-        ExtTextOut(hdc, rItem.left + SCALE(LIST_ITEM_INDENT), baseline, 
+        ExtTextOut(hdc, rItem.left + LIST_ITEM_INDENT * vga, baseline, 
             ETO_CLIPPED, &rItem, ss.caption, _tcslen(ss.caption), NULL);
 
         // draw setting
@@ -824,20 +829,28 @@ void DrawScreenOn(HDC hdc, RECT rClip) {
         }
 
         // if this item is selected, draw the details
-        if (nExpandedIndex == i && ss.type == stList) {
-            int rPartialHeight = trTransitionType == ttExpand
+        if (nExpandedIndex == i) {
+            rItem.top = rItem.bottom;
+            rItem.bottom += trTransitionType == ttExpand
                 ? (int)(dTransitionPct * rExpandedHeight)
                 : (int)((1.0 - dTransitionPct) * rExpandedHeight);
+            rItem.left = LIST_ITEM_INDENT * vga;
+            rItem.right -= LIST_ITEM_INDENT * vga;
 
-            rItem.top = rItem.bottom;
-            rItem.bottom += rPartialHeight;
-            rItem.left = SCALE(LIST_ITEM_INDENT);
-            rItem.right -= rItem.left;
+            RECT rTmp;
+            rTmp.left = 0;
+            rTmp.top = 0;
+            rTmp.right = rItem.right - rItem.left;
+            rTmp.bottom = rExpandedHeight;
 
-            RECT rItemClip;
-            IntersectRect(&rItemClip, &rItem, &rClip);
+            if (ss.type == stList) {
+                DrawListDetailsOn(hdcTmp, rTmp, value);
+            }
 
-            DrawListDetailsOn(hdc, rItem, rItemClip, value);
+            BitBlt(hdc, rItem.left, rItem.top, 
+                rItem.right - rItem.left, rItem.bottom - rItem.top, 
+                hdcTmp, 0, rExpandedHeight - (rItem.bottom - rItem.top),
+                SRCCOPY);
         }
     }
 
@@ -849,43 +862,31 @@ void DrawScreenOn(HDC hdc, RECT rClip) {
 
 }
 
-void DrawListDetailsOn(HDC hdc, RECT rect, RECT rClip, const TCHAR * tszValue) {
-
-    RECT rItemClip;
-    RECT rItem = rect;
-    rItem.bottom = rect.bottom - rExpandedHeight;
-
-    int indent = SCALE(LIST_ITEM_INDENT);
-    int height = SCALE(DEFAULT_ITEM_HEIGHT);
-
-    DrawRect(hdc, &rClip, GetSkinRGB(SKIN_COLOR_LIST_ITEM_SEPARATOR));
+void DrawListDetailsOn(HDC hdc, RECT rect, const TCHAR * tszValue) {
+    DrawRect(hdc, &rect, GetSkinRGB(SKIN_COLOR_LIST_ITEM_SEPARATOR));
 
     HFONT hfOld = (HFONT)SelectObject(hdc, PrimaryListFont);
     SetTextColor(hdc, GetSkinRGB(SKIN_COLOR_LIST_ITEM_TEXT));
     SetTextAlign(hdc, TA_LEFT | TA_TOP);
 
     for (int j = 0; j < nOptions; j++) {
-        rItem.top = rItem.bottom;
-        rItem.bottom += height;
-
-        IntersectRect(&rItemClip, &rItem, &rClip);
-        if (IsRectEmpty(&rItemClip))
-            continue;
-
-        ExtTextOut(hdc, rItem.left + indent * 2, rItem.top + indent,
-            ETO_CLIPPED, &rItemClip,
-            SettingOptions[j], _tcslen(SettingOptions[j]), NULL);
+        ExtTextOut(hdc, rect.left + LIST_ITEM_INDENT * vga * 2, 
+            rect.top + LIST_ITEM_INDENT * vga + j * DEFAULT_ITEM_HEIGHT * vga,
+            NULL, NULL, SettingOptions[j], 
+            _tcslen(SettingOptions[j]), NULL);
 
         if (0 == _tcscmp(tszValue, SettingOptions[j])
             || _tcslen(tszValue) == 0
             && _tcsstr(SettingOptions[j], SZ_AUTO) == SettingOptions[j]) {
-
-            int radius = indent / 2;
+            int radius = LIST_ITEM_INDENT * vga / 2;
             Ellipse(hdc, 
-                rItem.left + indent - radius,
-                rItem.top + height / 2 - radius,
-                rect.left + indent + radius,
-                rItem.top + height / 2 + radius);
+                rect.left + LIST_ITEM_INDENT * vga - radius,
+                rect.top + DEFAULT_ITEM_HEIGHT * vga / 2 
+                - radius + j * DEFAULT_ITEM_HEIGHT * vga,
+                rect.left + LIST_ITEM_INDENT * vga + radius,
+                rect.top + DEFAULT_ITEM_HEIGHT * vga / 2 
+                + radius + j * DEFAULT_ITEM_HEIGHT * vga);
+
         }
     }
 
@@ -915,7 +916,7 @@ void InitSurface(HWND hWnd) {
     // Title bar, with date, carrier, battery, signal strength, etc.
 	rTitlebar = rScreen;
 	if (pSettings->doShowFullScreen) {
-		rTitlebar.bottom = rTitlebar.top + SCALE(TITLE_BAR_HEIGHT);
+		rTitlebar.bottom = rTitlebar.top + TITLE_BAR_HEIGHT * vga;
 	}
 	else {
 		// collapse new titlebar so it is not active
@@ -936,6 +937,15 @@ void InitSurface(HWND hWnd) {
 	hbmMem = CreateCompatibleBitmap(hdc, nScreenWidth, nScreenHeight);
     SelectObject(hdcMem, hbmMem);
 
+    // Temporary canvas
+    if (hdcTmp)
+        CBR(DeleteDC(hdcTmp));
+    hdcTmp = CreateCompatibleDC(hdc);
+    if (hbmTmp)
+        CBR(DeleteObject(hbmTmp));
+	hbmTmp = CreateCompatibleBitmap(hdc, nScreenWidth, nScreenHeight);
+    SelectObject(hdcTmp, hbmTmp);
+
     // Initialize skin
     if (!hbmSkin) {
 		InitializeSkin(hdc);
@@ -952,37 +962,41 @@ Error:
 }
 
 COLORREF GetSkinRGB(int index) {
-	COLORREF c = GetPixel(hdcSkin, SCALE(index), 
-		SCALE(SKIN_COLORS_Y_OFFSET));
+	COLORREF c = GetPixel(hdcSkin, index * vga, 
+		SKIN_COLORS_Y_OFFSET * vga);
 	return c;
 }
 
 void InitializeSkin(HDC hdc) {
     HBITMAP hbmSkinFile = SHLoadImageFile(pSettings->skin_path);
-    int nScreenWidth = SCALE(DEFAULT_SCREEN_WIDTH);
-    int nSkinHeight = SCALE(DEFAULT_SKIN_HEIGHT);
 
 	BITMAP bmp;
 	GetObject(hbmSkinFile, sizeof(bmp), &bmp);
 
     // Load skin
-	HGDIOBJ hTmpOld = SelectObject(hdcMem, hbmSkinFile);
+	HGDIOBJ hTmpOld = SelectObject(hdcTmp, hbmSkinFile);
 
 	// Create skin bitmap
-	hbmSkin = CreateCompatibleBitmap(hdc, nScreenWidth, nSkinHeight);
+	hbmSkin = CreateCompatibleBitmap(hdc,
+		DEFAULT_SCREEN_WIDTH * vga, 
+		DEFAULT_SKIN_HEIGHT * vga);
+
 	hdcSkin = CreateCompatibleDC(hdc);
 	SelectObject(hdcSkin, hbmSkin);
 
 	// Stretch skin to properly fit the screen
-	StretchBlt(hdcSkin, 0, 0, nScreenWidth, nSkinHeight,
-		hdcMem, 0, 0, bmp.bmWidth, bmp.bmHeight, SRCCOPY);
+	StretchBlt(hdcSkin, 0, 0, DEFAULT_SCREEN_WIDTH * vga, 
+		DEFAULT_SKIN_HEIGHT * vga,
+		hdcTmp, 0, 0, bmp.bmWidth, bmp.bmHeight, SRCCOPY);
 
-	// Restore the original hdcMem bitmap
-	SelectObject(hdcMem, hTmpOld);
+	// Restore the original hdcTmp bitmap
+	SelectObject(hdcTmp, hTmpOld);
 }
 
 void InitializeCanvas() {
-    int nScreenWidth = ::GetSystemMetrics(SM_CXSCREEN);
+
+    int nScreenWidth = ::GetDeviceCaps(hdcSkin, HORZRES);
+	int nScreenHeight = ::GetDeviceCaps(hdcSkin, VERTRES);
 	
     if (hdcCanvas)
         DeleteDC(hdcCanvas);
@@ -993,16 +1007,16 @@ void InitializeCanvas() {
         DeleteObject(hbmCanvas);
     
 	hbmCanvas = CreateCompatibleBitmap(hdcSkin,
-		nScreenWidth, SCALE(DEFAULT_ITEM_HEIGHT));
+		nScreenWidth, DEFAULT_ITEM_HEIGHT * vga);
 
     SelectObject(hdcCanvas, hbmCanvas);
 
-	int textureWidth = SCALE(DEFAULT_SCREEN_WIDTH);
-    int textureHeight = SCALE(SKIN_CANVAS_HEIGHT);
+	int textureWidth = min(nScreenWidth, nScreenHeight);
+    int textureHeight = SKIN_CANVAS_HEIGHT * vga;
 
-    BitBlt(hdcCanvas, 0, 0, SCALE(DEFAULT_SCREEN_WIDTH),
-		SCALE(SKIN_CANVAS_HEIGHT),
-        hdcSkin, 0, SCALE(SKIN_CANVAS_Y_OFFSET), SRCCOPY);
+    BitBlt(hdcCanvas, 0, 0, DEFAULT_SCREEN_WIDTH * vga,
+		SKIN_CANVAS_HEIGHT * vga,
+        hdcSkin, 0, SKIN_CANVAS_Y_OFFSET * vga, SRCCOPY);
 
     // copy the texture to the full screen width (if in landscape mode)
     if (textureWidth < nScreenWidth) {
@@ -1011,18 +1025,18 @@ void InitializeCanvas() {
             hdcCanvas, 0, 0, SRCCOPY);
     }
 
-    // copy the texture to the full DEFAULT_ITEM_HEIGHT
+    // copy the texture to the full DEFAULT_ITEM_HEIGHT * vga
 	// several BitBlt's is faster than one StretchBlt
-    for (int i = textureHeight; i < SCALE(DEFAULT_ITEM_HEIGHT); i += i) {
-        int h = i + i > SCALE(DEFAULT_ITEM_HEIGHT) 
-			? SCALE(DEFAULT_ITEM_HEIGHT) - i 
+    for (int i = textureHeight; i < DEFAULT_ITEM_HEIGHT * vga; i += i) {
+        int h = i + i > DEFAULT_ITEM_HEIGHT * vga 
+			? DEFAULT_ITEM_HEIGHT * vga - i 
 			: i;
         BitBlt(hdcCanvas, 0, i, nScreenWidth, h, hdcCanvas, 0, 0, SRCCOPY);
     }
 }
 
 void DrawCanvasOn(HDC hdc, RECT rect) {
-	int canvasHeight = SCALE(SKIN_CANVAS_HEIGHT);
+	int canvasHeight = SKIN_CANVAS_HEIGHT * vga;
     for (int i = rect.top; i < rect.bottom; i += canvasHeight) {
 		int h = i + canvasHeight > rect.bottom ? rect.bottom - i : canvasHeight;
         BitBlt(hdc, rect.left, i, rect.right - rect.left, 
@@ -1031,7 +1045,7 @@ void DrawCanvasOn(HDC hdc, RECT rect) {
 }
 
 void CalculateHeights() {
-    ListHeight = ARRAYSIZE(Settings) * SCALE(DEFAULT_ITEM_HEIGHT);
+    ListHeight = ARRAYSIZE(Settings) * DEFAULT_ITEM_HEIGHT * vga;
     if (nExpandedIndex >= 0) {
         int tmp = rExpandedHeight;
         if (bTransitioning) {
@@ -1073,7 +1087,7 @@ void StartTransition(HWND hWnd, TransitionType tr, int duration) {
 void ExpandIt(HWND hWnd, int index) {
     nOptions = Settings[index].filler(SettingOptions, SettingValues[index]);
     nExpandedIndex = index;
-    rExpandedHeight = nOptions * SCALE(DEFAULT_ITEM_HEIGHT);
+    rExpandedHeight = DEFAULT_ITEM_HEIGHT * vga * nOptions;
     StartTransition(hWnd, ttExpand);
 }
 
@@ -1137,14 +1151,14 @@ void DrawOnOff(HDC hdc, RECT rect, bool value) {
     SetTextColor(hdc, GetSkinRGB(SKIN_COLOR_LIST_ITEM_TEXT));
 
     int baseline = rect.bottom 
-		- SCALE(DEFAULT_ITEM_HEIGHT - ITEM_SECONDARY_FONT_SIZE) / 2;
+		- (DEFAULT_ITEM_HEIGHT - ITEM_SECONDARY_FONT_SIZE) * vga / 2;
 
     const TCHAR * szOnOff = value ? SZ_ON : SZ_OFF;
 
     HFONT hfOld = (HFONT)SelectObject(hdc, SecondaryListFont);
 
-    ExtTextOut(hdc, rect.right - SCALE(LIST_ITEM_INDENT), baseline,
-        ETO_CLIPPED, &rect, szOnOff, _tcslen(szOnOff), NULL);
+    ExtTextOut(hdc, rect.right - LIST_ITEM_INDENT * vga, baseline, ETO_CLIPPED, 
+        &rect, szOnOff, _tcslen(szOnOff), NULL);
 
     SelectObject(hdc, hfOld);
 }
@@ -1154,14 +1168,14 @@ void DrawValue(HDC hdc, RECT rect, const TCHAR * value) {
     SetTextAlign(hdc, TA_RIGHT | TA_BOTTOM);
     SetTextColor(hdc, GetSkinRGB(SKIN_COLOR_LIST_ITEM_TEXT));
     int baseline = rect.bottom
-		- SCALE(DEFAULT_ITEM_HEIGHT - ITEM_SECONDARY_FONT_SIZE) / 2;
+		- (DEFAULT_ITEM_HEIGHT - ITEM_SECONDARY_FONT_SIZE) * vga / 2;
     
     if (0 == _tcslen(value)) {
-        ExtTextOut(hdc, rect.right - SCALE(LIST_ITEM_INDENT), baseline,
+        ExtTextOut(hdc, rect.right - LIST_ITEM_INDENT * vga, baseline,
 			ETO_CLIPPED, &rect, SZ_AUTO, 4, NULL);
     }
     else {
-        ExtTextOut(hdc, rect.right - SCALE(LIST_ITEM_INDENT), baseline,
+        ExtTextOut(hdc, rect.right - LIST_ITEM_INDENT * vga, baseline,
 			ETO_CLIPPED, &rect, value, _tcslen(value), NULL);
     }
     SelectObject(hdc, hfOld);
@@ -1257,8 +1271,6 @@ int favoriteCategoryFiller(TCHAR options[MAX_OPTIONS][MAX_LOADSTRING],
     for (WORD iRec = 0; iRec < MAX_OPTIONS; iRec++) {
         oid = CeReadRecordPropsEx(hdb, CEDB_ALLOWREALLOC, &wNumProps, NULL,
 			(LPBYTE *)&pRecord, &dwBufSize, NULL);
-        if (!oid)
-            break;
 
 		for (WORD i = 0; i < wNumProps; i++) {
 			switch(pRecord[i].propid) {

@@ -26,16 +26,11 @@ along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 #define PRIMARY_TEXT_LENGTH     64
 #define SECONDARY_TEXT_LENGTH   16
 
-#define NEWSCREEN_BACK -1
-#define NEWSCREEN_EXIT -2
-#define NEWSCREEN_BACK_ON_DEACTIVATE -3
-
 enum DataItemType {
     diNothing, diListItem, diText, diUrl,
     diName, diCompany, diPhone, diEmail,
     diDetailsButton, diEditButton, diCallButton, 
-    diSmsButton, diSaveContactButton, 
-    diCreateShortcutButton, diRemoveShortcutButton,
+    diSmsButton, diSaveContactButton,
 };
 
 /// List DATA

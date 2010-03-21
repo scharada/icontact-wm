@@ -1,6 +1,6 @@
 <application>
   <name>iContact</name>
-  <version>0.95</version>
+  <version>0.93</version>
   <description>
     <b>iContact</b><br />
     iContact is an all-inclusive finger-friendly contact manager for Windows Mobile PocketPC phones. It's easily skinnable, intuitive, and replaces the standard Windows Mobile contact chooser.<br />
@@ -9,14 +9,17 @@
     <br />
     <br />
     <b>Release Notes:</b><br/><br />
-    <b>0.95</b> - September 29, 2009
+    <b>0.93</b> - April 16, 2009
     <ul>
-      <li>[+] Added "Remove Shortcut" button to details screen if appropriate</li>
-      <li>[+] Added "createshortcut" and "removeshortcut" to language file</li>
-      <li>[+] Added contact shortcut icons to start menu shortcuts for Windows Mobile 6.5</li>
-      <li>[+] Added ability for hardware "*" key to favorite/defavorite a contact</li>
-      <li>[#] Fixed outgoing calls to numbers with no name displaying [null]</li>
-      <li>[#] Hid SIP button being displayed by iContactAE</li>
+      <li>Sped up recents list load time by 60 TIMES!</li>
+      <li>Added error message for missing skin</li>
+      <li>Added "gravity" setting to registry (accepts values from -100 to 100)</li>
+      <li>Fixed screen flicker on long press (thanks l3v5y!)</li>
+      <li>Gave title bar battery better resolution</li>
+	  <li>Updated icon with VGA to match default skin</li>
+      <li>Updated Favorite Category setting to display all categories, not just in-use</li>
+      <li>Made iContact detect new skin/language installation</li>
+      <li>Restored ability to scroll down from bottom of list and up from top of list</li>
     </ul>
   </description>
   <versionurl>http://www.supware.net/iContact/net.supware.icontact.xml</versionurl>

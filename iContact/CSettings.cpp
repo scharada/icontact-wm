@@ -47,11 +47,7 @@ CSettings::CSettings(void) {
 	LoadSetting(buffer, REGISTRY_MAXLENGTH, SZ_ICONTACT_REG_KEY,
         INI_FULLSCREEN_KEY, INI_FULLSCREEN_DEFAULT);
     this->doShowFullScreen = '1' == buffer[0];
-   
-	LoadSetting(buffer, REGISTRY_MAXLENGTH, SZ_ICONTACT_REG_KEY,
-        INI_ENABLE_SENSOR_KEY, INI_ENABLE_SENSOR_DEFAULT);
-    this->doEnableSensor = '1' == buffer[0];
-
+    
 	LoadSetting(buffer, REGISTRY_MAXLENGTH, SZ_ICONTACT_REG_KEY,
 		INI_GRAVITY_KEY, INI_GRAVITY_DEFAULT);
 	this->gravity = min(100, max(-100, _ttol(buffer))) / (float)100.0;
@@ -123,8 +119,6 @@ CSettings::CSettings(void) {
         &this->allcontacts_string, TEXT("allcontacts="), TEXT("All Contacts"),
         &this->details_string, TEXT("details="), TEXT("Details"),
         &this->categories_string, TEXT("categories="), TEXT("Categories"),
-		&this->createshortcut_string, TEXT("createshortcut="), TEXT("Create Shortcut"),
-		&this->removeshortcut_string, TEXT("removeshortcut="), TEXT("Remove Shortcut")
     };
 
 	// Read the file into this->language_data TCHAR array
@@ -136,41 +130,33 @@ CSettings::CSettings(void) {
     DWORD dwFileSize = min(2048, GetFileSize(hCache, NULL));
     DWORD dwBytesRead;
 
-    BOOL readOk = ReadFile(hCache, cbuffer, dwFileSize, &dwBytesRead, NULL);
+    ReadFile(hCache, cbuffer, dwFileSize, &dwBytesRead, NULL);
+    ASSERT(dwBytesRead == dwFileSize);
 
-    if (!readOk) {
-        // TODO: report error?
-        for (int i = 0; i < ARRAYSIZE(languageSettings); i++) {
-            *(languageSettings[i].ppSetting) = languageSettings[i].pszDefault;
-        }
+	::mbstowcs(this->language_data, cbuffer, 2048);
+
+	// Then set all the TCHAR * to the appropriate locations in that array
+	TCHAR * pStr;
+    for (int i = 0; i < ARRAYSIZE(languageSettings); i++) {
+
+		pStr = _tcsstr(this->language_data, languageSettings[i].pszName);
+
+		if (pStr == NULL) {
+			*(languageSettings[i].ppSetting) = languageSettings[i].pszDefault;
+			continue;
+		}
+
+		// we want what's after the equal, not what's before it
+        *(languageSettings[i].ppSetting) = _tcsstr(pStr, TEXT("=")) + 1;
     }
-    else {
-        ASSERT(dwFileSize == dwBytesRead);
-    	::mbstowcs(this->language_data, cbuffer, 2048);
 
-	    // Then set all the TCHAR * to the appropriate locations in that array
-	    TCHAR * pStr = 0;
-        for (int i = 0; i < ARRAYSIZE(languageSettings); i++) {
-
-		    pStr = _tcsstr(this->language_data, languageSettings[i].pszName);
-
-		    if (pStr == NULL) {
-			    *(languageSettings[i].ppSetting) = languageSettings[i].pszDefault;
-			    continue;
-		    }
-
-		    // we want what's after the equal, not what's before it
-            *(languageSettings[i].ppSetting) = _tcsstr(pStr, TEXT("=")) + 1;
-        }
-
-	    // Then add nulls in the appropriate locations 
-	    // (replace '=', '\r', '\n', with 0)
-	    // (the other data in the file is then just junk)
-	    for (pStr = this->language_data; pStr < this->language_data + 2048; pStr++) {
-		    if (*pStr == '\r' || *pStr == '\n' || *pStr == '=')
-			    *pStr = 0;
-	    }
-    }
+	// Then add nulls in the appropriate locations 
+	// (replace '=', '\r', '\n', with 0)
+	// (the other data in the file is then just junk)
+	for (pStr = this->language_data; pStr < this->language_data + 2048; pStr++) {
+		if (*pStr == '\r' || *pStr == '\n' || *pStr == '=')
+			*pStr = 0;
+	}
 
     //////////////////////////////////////////////////
 	// Special handling for "Favorites" category:

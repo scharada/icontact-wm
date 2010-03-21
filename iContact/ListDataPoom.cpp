@@ -21,8 +21,6 @@ along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 #include "GraphicFunctions.h"
 #include "ListDataPoom.h"
 #include "PhoneUtils.h"
-#include "ShortcutUtils.h"
-#include "FileUtils.h"
 
 IPOutlookApp2 *             polApp;
 IFolder *                   pCurrFldr;
@@ -34,8 +32,6 @@ UINT                        nBitmapWidth;
 
 // Internal functions to be used by the functions in this file
 HRESULT initPoom();
-HRESULT PoomSaveWM65StartIcon(DataItem * data, TCHAR * szName);
-HRESULT PoomDeleteWM65StartIcon(TCHAR * szName);
 
 // http://msdn.microsoft.com/en-us/library/bb446087.aspx
 HRESULT PoomCategoriesPopulate(DataItem * parent, void (*adder)(DataItem*),
@@ -485,22 +481,6 @@ HRESULT PoomDetailsPopulate(DataItem * parent, void (*adder)(DataItem*),
     SysFreeString(buffer);
     adder(&data); 
 
-	// Add either "Create Shortcut" or "Remove Shortcut"
-	// depending on whether the shortcut exists.
-	pContact->get_FileAs(&buffer);
-	TCHAR szLinkPath[MAX_PATH] = {0};
-	BOOL shortcutExists = GetShortcutFilename(szLinkPath, buffer);
-    SysFreeString(buffer);
-	if (shortcutExists) {
-		data.type = diRemoveShortcutButton;
-		StringCchCopy(data.szPrimaryText, PRIMARY_TEXT_LENGTH, pSettings->removeshortcut_string);
-	}
-	else {
-		data.type = diCreateShortcutButton;
-		StringCchCopy(data.szPrimaryText, PRIMARY_TEXT_LENGTH, pSettings->createshortcut_string);
-	}
-    adder(&data); 
-
     hr = S_OK;
 
 Error:
@@ -530,10 +510,6 @@ HRESULT PoomDetailsClick(DataItem * data, float x,
     BSTR buffer = NULL;
     HWND hWnd = 0;
 
-    TCHAR szObjectPath[MAX_PATH] = {0};
-    TCHAR szArguments[64] = {0};
-    TCHAR szIconPath[MAX_PATH] = {0};
-
     int oid = data->oId;
     if (oid == -1)
         return E_INVALIDARG;
@@ -560,30 +536,6 @@ HRESULT PoomDetailsClick(DataItem * data, float x,
             CHR(hr);
             break;
 
-        case diCreateShortcutButton:
-            ::GetModuleFileName(NULL, szObjectPath, MAX_PATH);
-            StringCchPrintf(szArguments, 64, TEXT("-details %ld"), oid);
-            
-            hr = pDisp->QueryInterface(IID_IContact, (LPVOID*)&pContact);
-            CHR(hr);
-            pContact->get_FileAs(&buffer);
-
-            CreateShortcutFile(buffer, szObjectPath, szArguments, NULL);
-            PoomSaveWM65StartIcon(data, buffer);
-
-            *newScreen = NEWSCREEN_BACK;
-            break;
-
-		case diRemoveShortcutButton:
-            hr = pDisp->QueryInterface(IID_IContact, (LPVOID*)&pContact);
-            CHR(hr);
-            pContact->get_FileAs(&buffer);
-            RemoveShortcutFile(buffer);
-            PoomDeleteWM65StartIcon(buffer);
-
-            *newScreen = NEWSCREEN_BACK;
-			break;
-
         case diPhone:
             hr = pDisp->QueryInterface(IID_IContact, (LPVOID*)&pContact);
             CHR(hr);
@@ -595,19 +547,18 @@ HRESULT PoomDetailsClick(DataItem * data, float x,
                 Call(data->szPrimaryText, buffer);
 
             SysFreeString(buffer);
-            *newScreen = NEWSCREEN_BACK_ON_DEACTIVATE;
+            *newScreen = -3;
             break;
 
         case diEmail:
             SendEMail(pSettings->email_account, data->szPrimaryText);
-            *newScreen = NEWSCREEN_BACK_ON_DEACTIVATE;
+            *newScreen = -3;
             break;
 
         case diUrl:
             OpenURL(data->szPrimaryText);
-            *newScreen = NEWSCREEN_BACK_ON_DEACTIVATE;
+            *newScreen = -3;
             break;
-
     }
 
     hr = S_OK;
@@ -758,101 +709,4 @@ Error:
     RELEASE_OBJ(pStream);
 
     return hr;
-}
-
-HRESULT PoomSaveWM65StartIcon(DataItem * data, TCHAR * szName) {
-	HRESULT hr = E_FAIL;
-	UINT uWidth = 90;
-	UINT uHeight = 90;
-
-
-	// Load the user's avatar onto a bitmap in memory
-	HDC hdcForeground = GetDC(GetForegroundWindow());
-	HDC hdc = CreateCompatibleDC(hdcForeground);
-	HBITMAP hbitmap = NULL;
-	// May fail if user doesn't have an avatar
-	hr = PoomDetailsLoadBitmap(data, &hbitmap, &uWidth, &uHeight);
-	CHR(hr);
-	HGDIOBJ hold = SelectObject(hdc, hbitmap);
-#ifdef DEBUG
-	BitBlt(hdcForeground, 0, 0, uWidth, uHeight, hdc, 0, 0, SRCCOPY);
-#endif
-
-	// copy the image to a DIBSection
-	BITMAPINFO bmi;
-	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-	bmi.bmiHeader.biWidth = uWidth;
-	bmi.bmiHeader.biHeight = -1 * uHeight;
-	bmi.bmiHeader.biPlanes = 1;
-	bmi.bmiHeader.biBitCount = 24;
-	bmi.bmiHeader.biCompression = BI_RGB; 
-	bmi.bmiHeader.biSizeImage = 0;
-	bmi.bmiHeader.biXPelsPerMeter = 0;
-	bmi.bmiHeader.biYPelsPerMeter = 0;
-	bmi.bmiHeader.biClrUsed = 0;
-	bmi.bmiHeader.biClrImportant = 0;
-
-	BYTE * pBuffer = NULL;
-
-	HDC hdc2 = CreateCompatibleDC(hdcForeground);
-	HBITMAP hbitmap2 = CreateDIBSection(hdc2, &bmi, DIB_RGB_COLORS,
-		(void **)&pBuffer, NULL, 0);
-
-	HGDIOBJ hold2 = SelectObject(hdc2, hbitmap2);
-
-	BitBlt(hdc2, 0, 0, uWidth, uHeight, hdc, 0, 0, SRCCOPY);
-
-	// create an imaging factory
-    IImagingFactory* pFactory = NULL;
-    hr = CoCreateInstance(CLSID_ImagingFactory, NULL, CLSCTX_INPROC_SERVER,
-        IID_IImagingFactory, (void**) &pFactory);
-    CHR(hr);
-
-	// Save the image
-	TCHAR szFullPath[MAX_PATH];
-	GetCurDirFilename(szFullPath, szName, TEXT("png"));
-	hr = SavePNG(hdc2, hbitmap2, szFullPath, pFactory);
-	CHR(hr);
-	
-	// Update registry
-	// http://windowsteamblog.com/blogs/windowsphone/archive/2009/08/11/using-custom-icons-in-windows-mobile-6-5.aspx
-	// [HKEY_LOCAL_MACHINE\Security\Shell\StartInfo\Start\Phone.lnk]
-	// "Icon"="\Application Data\My App\newphoneicon.png"
-	HKEY  hkey = 0;
-    DWORD dwDisposition = 0;
-    DWORD dwType = REG_SZ;
-	TCHAR szSubKey[MAX_PATH];
-	StringCchPrintf(szSubKey, MAX_PATH, TEXT("\\Security\\Shell\\StartInfo\\Start\\%s.lnk"), szName);
-
-	// create (or open) the specified registry key
-    LONG result = RegCreateKeyEx(HKEY_LOCAL_MACHINE, szSubKey, 
-        0, NULL, 0, 0, NULL, &hkey, &dwDisposition);
-    CBR(result == ERROR_SUCCESS);
-
-    DWORD dwSize = (_tcslen(szFullPath) + 1) * sizeof(TCHAR);
-    result = RegSetValueEx(hkey, TEXT("Icon"), NULL, dwType, (PBYTE)szFullPath, dwSize);
-
-	hr = S_OK;
-
-Error:
-    if (hkey != NULL)
-        RegCloseKey(hkey);
-	RELEASE_OBJ(pFactory);
-	SelectObject(hdc, hold);
-	SelectObject(hdc2, hold2);
-	return hr;
-}
-
-HRESULT PoomDeleteWM65StartIcon(TCHAR * szName) {
-	// Delete registry key
-	TCHAR szSubKey[MAX_PATH];
-	StringCchPrintf(szSubKey, MAX_PATH, TEXT("\\Security\\Shell\\StartInfo\\Start\\%s.lnk"), szName);
-	LONG result = RegDeleteKey(HKEY_LOCAL_MACHINE, szSubKey);
-
-	// Delete image file
-	TCHAR szFullPath[MAX_PATH];
-	GetCurDirFilename(szFullPath, szName, TEXT("png"));
-	DeleteFile(szFullPath);
-
-	return S_OK;
 }

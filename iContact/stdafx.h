@@ -26,9 +26,7 @@ along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 #pragma comment(linker, "/nodefaultlib:libcd.lib")
 
 // NOTE - this value is not strongly correlated to the Windows CE OS version being targeted
-#ifndef WINVER
 #define WINVER _WIN32_WCE
-#endif
 
 #include <ceconfig.h>
 #if defined(WIN32_PLATFORM_PSPC) || defined(WIN32_PLATFORM_WFSP)

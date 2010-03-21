@@ -15,12 +15,7 @@ You should have received a copy of the GNU General Public License
 along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************/
 
-BOOL CreateShortcutFile(const TCHAR * szShortcutTitle,
+bool CreateShortcutFile(const TCHAR * szShortcutTitle,
                         const TCHAR * szObjectPath,
                         const TCHAR * szArguments,
                         const TCHAR * szIconsPath);
-
-BOOL RemoveShortcutFile(const TCHAR * szShortcutTitle);
-
-BOOL GetShortcutFilename(TCHAR * szShortcutPath, 
-						 const TCHAR * szShortcutTitle);

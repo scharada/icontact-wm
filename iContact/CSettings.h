@@ -30,8 +30,6 @@ along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 #define INI_EXIT_ON_ACTION_DEFAULT  TEXT("0")
 #define INI_FAST_GFX_KEY            TEXT("FastGraphics")
 #define INI_FAST_GFX_DEFAULT        TEXT("0")
-#define INI_ENABLE_SENSOR_KEY       TEXT("EnableSensor")
-#define INI_ENABLE_SENSOR_DEFAULT   TEXT("1")
 #define INI_SKIN_KEY                TEXT("Skin")
 #define INI_SKIN_DEFAULT            TEXT("default")
 #define INI_LANGUAGE_KEY            TEXT("Language")
@@ -60,7 +58,6 @@ public:
 	bool doExitOnMinimize;
     bool doFastGraphics;
 	bool doShowFullScreen;
-    bool doEnableSensor;
 
     // Strings
     TCHAR skin_path[MAX_PATH];
@@ -108,6 +105,4 @@ public:
     const TCHAR * allcontacts_string;
     const TCHAR * details_string;
     const TCHAR * categories_string;
-	const TCHAR * createshortcut_string;
-	const TCHAR * removeshortcut_string;
 };

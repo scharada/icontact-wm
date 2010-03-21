@@ -39,11 +39,7 @@ void Call(TCHAR * number, TCHAR * name) {
 	TAPIREQUESTMAKECALL tapiRequestMakeCall;
 
     if (GetIDialerFilename(szFilename)) {
-		if (name != NULL && _tcslen(name) > 0)
-	        StringCchPrintf(szArguments, MAX_PATH, TEXT("%s -name=%s"), number, name);
-		else
-			StringCchCopy(szArguments, MAX_PATH, number);
-
+        StringCchPrintf(szArguments, MAX_PATH, TEXT("%s -name=%s"), number, name);
         CreateProcess(szFilename, szArguments,
             NULL, NULL, FALSE, NULL, NULL, NULL, NULL, &pi);
     }
@@ -57,10 +53,7 @@ void Call(TCHAR * number, TCHAR * name) {
 		tapiRequestMakeCall = (TAPIREQUESTMAKECALL)GetProcAddress(
 			hiCellCoreDll, TEXT("tapiRequestMakeCallW"));
 
-		if (name != NULL && _tcslen(name) > 0)
-	        tapiRequestMakeCall(number, NULL, name, NULL);
-		else
-			tapiRequestMakeCall(number, NULL, number, NULL);
+        tapiRequestMakeCall(number, NULL, name, NULL);
     }
 }
 

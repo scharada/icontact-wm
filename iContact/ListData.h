@@ -38,7 +38,7 @@ void UnselectItem();
 void GetItemGroup(int index, TCHAR * pszGroup);
 bool IsItemNewGroup(int index);
 bool IsItemNewType(int index);
-int CountSameTypeAs(int index, int limit);
+int CountSameTypeAs(int index);
 int SelectFirstItem();
 int SelectLastItem();
 int SelectPreviousItem(int defaultIndex, bool byGroup = false);

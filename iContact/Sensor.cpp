@@ -74,8 +74,7 @@ bool SensorGestureInit(HWND hWnd) {
 }
 
 void SensorGesturePoll(PSENSORDATA psd) {
-    if (pfnHTCSensorGetDataOutput)
-        pfnHTCSensorGetDataOutput(g_hSensor, psd);
+    pfnHTCSensorGetDataOutput(g_hSensor, psd);
 }
 
 bool SensorGestureUninit() {

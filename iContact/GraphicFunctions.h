@@ -29,5 +29,3 @@ HBITMAP HBITMAPFromImage (IN IImage * pImage, IN COLORREF crBackColor);
 HRESULT GetBitmapFromStream(IStream* pStream, HBITMAP* phBitmap, 
     UINT* puWidth, UINT* puHeight);
 void DrawRect(HDC hdc, LPRECT prc, COLORREF clr);
-HRESULT SavePNG(HDC hDC, HBITMAP hBitmap, const TCHAR* szPath, 
-				IImagingFactory * pFactory);

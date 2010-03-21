@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************/
 
-// portions of this file were adapted from Google Gears
+// portions of this file were originally from Google Gears
 // (http://gears.googlecode.com)
 // which is licensed as follows:
 //
@@ -65,8 +65,9 @@ static bool CreateShellLink(const TCHAR * szLinkPath,
     // [] = optional
     // n = number of characters after the hash, up to and including the last comma
     // eg. 63#\Windows\iexplore.exe -http://www.google.com?\Windows\test.exe,101
-    if (!szObjectPath)
+    if (!szObjectPath) {
         return false;
+    }
 
     TCHAR buffer[MAX_PATH];
     StringCchPrintf(buffer, MAX_PATH, TEXT("\"%s\""), szObjectPath);
@@ -103,62 +104,36 @@ static bool CreateShellLink(const TCHAR * szLinkPath,
     }
 
     // actually write the file
-    HANDLE hShortcut = CreateFile(szLinkPath, GENERIC_WRITE, 0, NULL, 
-        CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE hShortcut = CreateFile(szLinkPath, GENERIC_READ, 0, NULL, 
+        OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     
     if (hShortcut == INVALID_HANDLE_VALUE)
         return false;
 
-    // Convert from TCHAR to multi-byte CHAR
-    CHAR cszShortcut[MAX_PATH];
-    wcstombs(cszShortcut, shortcut, MAX_PATH);
-
     DWORD dwNumberOfBytesWritten = 0;
-    bool success = 0 != WriteFile(hShortcut, cszShortcut, 
-        strlen(cszShortcut), &dwNumberOfBytesWritten, NULL);
+    bool success = 0 != WriteFile(hShortcut, shortcut, _tcslen(shortcut),
+        &dwNumberOfBytesWritten, NULL);
 
     CloseHandle(hShortcut);
     return success;
 }
 
-BOOL CreateShortcutFile(const TCHAR * szShortcutTitle,
+bool CreateShortcutFile(const TCHAR * szShortcutTitle,
                         const TCHAR * szObjectPath,
                         const TCHAR * szArguments,
-                        const TCHAR * szIconPath) {
+                        const TCHAR * szIconsPath) {
 
-    TCHAR szShortcutPath[MAX_PATH] = {0};
-	BOOL fileExists = GetShortcutFilename(szShortcutPath, szShortcutTitle);
-
-    // Return immediately if shortcut already exists
-	// or path is unknown.
-	if (fileExists || 0 == _tcslen(szShortcutPath))
-		return false;
-
-    return CreateShellLink(szShortcutPath, szIconPath, szObjectPath, szArguments);
-}
-
-BOOL RemoveShortcutFile(const TCHAR * szShortcutTitle) {
-    TCHAR szShortcutPath[MAX_PATH] = {0};
-	BOOL fileExists = GetShortcutFilename(szShortcutPath, szShortcutTitle);
-
-    // Return immediately if shortcut does not exist
-	if (!fileExists)
-		return false;
-
-	return DeleteFile(szShortcutPath);
-}
-
-// Finds the name to the shortcut file, and as a side effect 
-// returns whether the file exists.
-BOOL GetShortcutFilename(TCHAR * szShortcutPath, 
-						 const TCHAR * szShortcutTitle) {
-
-    if (!SHGetSpecialFolderPath(NULL, szShortcutPath, CSIDL_PROGRAMS, FALSE))
+    TCHAR szLinkPath[MAX_PATH] = {0};
+    if (!SHGetSpecialFolderPath(NULL, szLinkPath, CSIDL_PROGRAMS, FALSE))
         return false;
 
-    StringCchCat(szShortcutPath, MAX_PATH, TEXT("\\"));
-    StringCchCat(szShortcutPath, MAX_PATH, szShortcutTitle);
-    StringCchCat(szShortcutPath, MAX_PATH, TEXT(".lnk"));	
+    StringCchCat(szLinkPath, MAX_PATH, TEXT("\\"));
+    StringCchCat(szLinkPath, MAX_PATH, szShortcutTitle);
+    StringCchCat(szLinkPath, MAX_PATH, TEXT(".lnk"));
 
-    return FileExists(szShortcutPath);
+    // Return immediately if shortcut already exists.
+    if (FileExists(szLinkPath))
+        return true;
+
+    return CreateShellLink(szLinkPath, szIconsPath, szObjectPath, szArguments);
 }

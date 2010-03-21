@@ -24,27 +24,6 @@ void SaveSetting(const TCHAR * lpSubKey, const TCHAR * szValue,
         RegCloseKey(hkey);
 }
 
-void SaveSetting(const TCHAR * lpSubKey, DWORD dwValue,
-                 const TCHAR * szKeyName) {
-    HKEY  hkey = 0;
-    DWORD dwDisposition = 0;
-    DWORD dwType = REG_DWORD;
-    DWORD dwSize = 0;
-
-    // create (or open) the specified registry key
-    LONG result = RegCreateKeyEx(HKEY_CURRENT_USER, lpSubKey, 
-        0, NULL, 0, 0, NULL, &hkey, &dwDisposition);
-
-    if (result != ERROR_SUCCESS)
-        return;
-
-    dwSize = sizeof(DWORD);
-    result = RegSetValueEx(hkey, szKeyName, NULL, dwType, (PBYTE)&dwValue, dwSize);
-
-    if (hkey != NULL)
-        RegCloseKey(hkey);
-}
-
 void LoadSetting(TCHAR * szValue, int cchValue, const TCHAR * lpSubKey,
                  const TCHAR * szKeyName, const TCHAR * szDefault) {
 
