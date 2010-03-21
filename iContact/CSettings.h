@@ -15,31 +15,29 @@ You should have received a copy of the GNU General Public License
 along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************/
 
+#include "SimpleIni.h"
+#include "stdafx.h"
+
 #pragma once
 
-#define SZ_ICONTACT_REG_KEY         TEXT("Software\\Supware.net\\iContact")
-#define REGISTRY_MAXLENGTH          32
+#define MAIN_SECTION                TEXT("main")
+#define LANGUAGE_SECTION            TEXT("language")
+#define SKIN_SECTION                TEXT("theme")
 
 #define INI_EMAIL_ACCOUNT_KEY       TEXT("EmailAccount")
 #define INI_EMAIL_ACCOUNT_DEFAULT   TEXT("")
 #define INI_FAVORITE_CAT_KEY        TEXT("FavoriteCategory")
-#define INI_FAVORITE_CAT_DEFAULT    TEXT("")
+#define INI_FAVORITE_CAT_DEFAULT    TEXT("Favorites")
 #define INI_EXIT_ON_MIN_KEY         TEXT("ExitOnMinimize")
 #define INI_EXIT_ON_MIN_DEFAULT     TEXT("0")
 #define INI_EXIT_ON_ACTION_KEY      TEXT("ExitOnAction")
 #define INI_EXIT_ON_ACTION_DEFAULT  TEXT("0")
 #define INI_FAST_GFX_KEY            TEXT("FastGraphics")
 #define INI_FAST_GFX_DEFAULT        TEXT("0")
-#define INI_ENABLE_SENSOR_KEY       TEXT("EnableSensor")
-#define INI_ENABLE_SENSOR_DEFAULT   TEXT("1")
 #define INI_SKIN_KEY                TEXT("Skin")
 #define INI_SKIN_DEFAULT            TEXT("default")
 #define INI_LANGUAGE_KEY            TEXT("Language")
 #define INI_LANGUAGE_DEFAULT        TEXT("english")
-#define INI_FULLSCREEN_KEY			TEXT("FullScreen")
-#define INI_FULLSCREEN_DEFAULT		TEXT("1")
-#define INI_GRAVITY_KEY				TEXT("Gravity")
-#define INI_GRAVITY_DEFAULT			TEXT("20")
 
 struct LanguageSetting {
     const TCHAR ** ppSetting;
@@ -47,30 +45,29 @@ struct LanguageSetting {
     TCHAR * pszDefault;
 };
 
+COLORREF parseColor(const TCHAR * color_hex, const TCHAR * default_hex);
+
 class CSettings {
+private:
+    COLORREF initColor(TCHAR *, TCHAR *, TCHAR *);
+
+    TCHAR szIniPath[MAX_PATH];
+
 public:
     CSettings(void);
+    ~CSettings(void);
+    void Save(void);
+
+    // internal data
+    CSimpleIniW ini;
+    CSimpleIniW iniLanguage;
+    CSimpleIniW iniSkin;
 
     // POOM settings
-    TCHAR favorite_category[REGISTRY_MAXLENGTH];
-    TCHAR email_account[REGISTRY_MAXLENGTH];
-
-	// toggles
-	bool doExitOnAction;
-	bool doExitOnMinimize;
-    bool doFastGraphics;
-	bool doShowFullScreen;
-    bool doEnableSensor;
+    const TCHAR * favorite_category;
+    const TCHAR * email_account;
 
     // Strings
-    TCHAR skin_path[MAX_PATH];
-	TCHAR language_data[2048];
-
-	// Physics
-	float gravity;
-
-	// These strings are just pointers to within language_data
-	const TCHAR * favorites_default;
     const TCHAR * alphabet;
     const TCHAR * mobile_string;
     const TCHAR * home_string;
@@ -107,7 +104,37 @@ public:
     const TCHAR * recents_string;
     const TCHAR * allcontacts_string;
     const TCHAR * details_string;
-    const TCHAR * categories_string;
-	const TCHAR * createshortcut_string;
-	const TCHAR * removeshortcut_string;
+
+	bool doExitOnAction;
+	bool doExitOnMinimize;
+    bool doFastGraphics;
+
+    const TCHAR * skin_name;
+
+    // SKIN
+    COLORREF rgbTitlebarBackground;
+    COLORREF rgbTitlebarText;
+    COLORREF rgbTitlebarSignal;
+    COLORREF rgbHeader;
+    COLORREF rgbHeaderLoading;
+    HBRUSH hbrListGroupBackground;
+    COLORREF rgbListGroupText;
+    HBRUSH hbrListItemBackground;
+	COLORREF rgbListItemText;
+    COLORREF rgbListItemMissedText;
+    COLORREF rgbListItemFavoriteText;
+    HBRUSH hbrListItemForeground;
+    HPEN hpenListItemForeground;
+	COLORREF rgbListItemSelectedBackground1;
+	COLORREF rgbListItemSelectedBackground2;
+    HBRUSH hbrListItemSelectedBackground;
+    COLORREF rgbListItemSelectedText;
+	COLORREF rgbListItemSelectedShadow;
+    HBRUSH hbrListItemSeparator;
+    COLORREF rgbDetailMainText;
+    COLORREF rgbDetailMainShadow;
+    HBRUSH hbrDetailItemSeparator;
+	COLORREF rgbKeyboardText;
+    HBRUSH hbrKeyboardBackground;
+    HPEN hpenKeyboardGrid;
 };

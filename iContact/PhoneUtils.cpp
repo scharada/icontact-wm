@@ -17,13 +17,18 @@ along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "stdafx.h"
 #include "PhoneUtils.h"
-#include "FileUtils.h"
 #include "Macros.h"
 
 #include <pimstore.h>
 
-// dynamically loaded function
-typedef LONG (* TAPIREQUESTMAKECALL)(LPCTSTR, LPCTSTR, LPCTSTR, LPCTSTR);
+#include "windows.h"
+#include "regext.h"
+#include "tapi.h"
+#include "snapi.h"
+
+#include <cemapi.h>
+#include <mapiutil.h>
+#include <mapidefs.h>
 
 #define MAX_COMMAND_LINE 200
 #define MAX_LOADSTRING 100
@@ -31,37 +36,16 @@ typedef LONG (* TAPIREQUESTMAKECALL)(LPCTSTR, LPCTSTR, LPCTSTR, LPCTSTR);
 // main functions
 
 void Call(TCHAR * number, TCHAR * name) {
-    TCHAR szFilename[MAX_PATH];
-    PROCESS_INFORMATION pi;
-    TCHAR szArguments[MAX_PATH];
+    PHONEMAKECALLINFO mci = {0};
+    LRESULT lResult;
 
-	HINSTANCE hiCellCoreDll;
-	TAPIREQUESTMAKECALL tapiRequestMakeCall;
-
-    if (GetIDialerFilename(szFilename)) {
-		if (name != NULL && _tcslen(name) > 0)
-	        StringCchPrintf(szArguments, MAX_PATH, TEXT("%s -name=%s"), number, name);
-		else
-			StringCchCopy(szArguments, MAX_PATH, number);
-
-        CreateProcess(szFilename, szArguments,
-            NULL, NULL, FALSE, NULL, NULL, NULL, NULL, &pi);
-    }
-    else {
-		hiCellCoreDll = LoadLibrary(TEXT("cellcore.dll"));
-		if (!hiCellCoreDll) {
-			// TODO: alert user?
-			return;
-		}
-
-		tapiRequestMakeCall = (TAPIREQUESTMAKECALL)GetProcAddress(
-			hiCellCoreDll, TEXT("tapiRequestMakeCallW"));
-
-		if (name != NULL && _tcslen(name) > 0)
-	        tapiRequestMakeCall(number, NULL, name, NULL);
-		else
-			tapiRequestMakeCall(number, NULL, number, NULL);
-    }
+    mci.cbSize = sizeof(mci);
+    mci.dwFlags = 0;
+    //mci.pszDestAddress = tszPhoneNumber;
+    //mci.pszDestAddress = ActionsList[SubListCurrentAction].text;
+    mci.pszDestAddress = number;
+    mci.pszCalledParty = name;
+    lResult = PhoneMakeCall(&mci);
 }
 
 void SendSMS(TCHAR * number, TCHAR * name) {
@@ -99,16 +83,11 @@ void SendEMail(const TCHAR * account, TCHAR * to) {
 
 // http://blogs.msdn.com/windowsmobile/archive/2007/03/21/getting-started-with-mapi.aspx
 void GetDefaultEmailAccount(TCHAR * tszAccountName) {
-    
-    //TODO: figure out why this function behaves badly
-    StringCchPrintf(tszAccountName, MAX_LOADSTRING, TEXT("ActiveSync"));
-    return;
-
-    /*HRESULT hr;
+    HRESULT hr;
     IMAPITable * ptbl;
     IMAPISession * pSession;
     SRowSet *prowset = NULL;
-    SPropValue *pval = NULL;
+    SPropValue  *pval = NULL;
     SizedSPropTagArray (1, spta) = { 1, PR_DISPLAY_NAME };
     int index = 0;
    
@@ -129,7 +108,7 @@ void GetDefaultEmailAccount(TCHAR * tszAccountName) {
         FreeProws(prowset);
         prowset = NULL;
  
-        hr = ptbl->QueryRows(1, 0, &prowset);
+        hr = ptbl->QueryRows (1, 0, &prowset);
         if ((hr != S_OK) || (prowset == NULL) || (prowset->cRows == 0)) {
             break;
         }
@@ -143,17 +122,15 @@ void GetDefaultEmailAccount(TCHAR * tszAccountName) {
             StringCchCopy(tszAccountName, MAX_LOADSTRING, pval[0].Value.lpszW);
             break;
         }
-
         //MessageBox(NULL, pval[0].Value.lpszW, TEXT("Message Store"), MB_OK);
     }
+ 
+    pSession->Logoff(0, 0, 0);
+ 
 Error:
     RELEASE_OBJ(ptbl);
-
-    FreeProws(prowset);
-
-    pSession->Logoff(0, 0, 0);
     RELEASE_OBJ(pSession);
-    */
+    FreeProws(prowset);
 }
 
 void OpenURL(const TCHAR * url) {
@@ -177,12 +154,16 @@ void OpenURL(const TCHAR * url) {
 /* TODO: this would be cool! Fix it!
 void OpenGoogleMaps(CEOID ceoid) {
     PROCESS_INFORMATION pi;
- 
-    TCHAR szGmapsPath[MAX_PATH];
     TCHAR tszArgs[MAX_COMMAND_LINE];
 
-    GetCurDirFilename(szGmapsPath, TEXT("..\\GoogleMaps\\GoogleMaps.exe"));
-    StringCchPrintf(tszArgs, MAX_COMMAND_LINE, TEXT("-CEOID %u"), ceoid);
+    TCHAR szGmapsPath[MAX_PATH];
+    GetModuleFileName(NULL, szGmapsPath, MAX_PATH);
+    TCHAR * pstr = _tcsrchr(szGmapsPath, '\\');
+    if (pstr) *(++pstr) = '\0';
+    StringCchCat(szGmapsPath, MAX_PATH, TEXT("..\\GoogleMaps\\GoogleMaps.exe"));
+
+    StringCchPrintf(tszArgs, MAX_COMMAND_LINE, 
+        TEXT("-CEOID %u"), ceoid);
 
     CreateProcess(szGmapsPath, tszArgs,
         NULL, NULL, FALSE, NULL, NULL, NULL, NULL, &pi);
@@ -193,18 +174,19 @@ void RunDialer() {
     PROCESS_INFORMATION pi;
 
     TCHAR szDialerPath[MAX_PATH];
+    GetModuleFileName(NULL, szDialerPath, MAX_PATH);
+    TCHAR * pstr = _tcsrchr(szDialerPath, '\\');
+    if (pstr) *(++pstr) = '\0';
+    StringCchCat(szDialerPath, MAX_PATH, TEXT("..\\iDialer\\iDialer.exe"));
 
-    if (GetIDialerFilename(szDialerPath)) {
-        CreateProcess(szDialerPath, NULL,
-            NULL, NULL, FALSE, NULL, NULL, NULL, NULL, &pi);
-    }
+    BOOL success = CreateProcess(szDialerPath, NULL,
+        NULL, NULL, FALSE, NULL, NULL, NULL, NULL, &pi);
 
-    else {
+    if (!success) {
         CreateProcess(TEXT("cprog.exe"), NULL, 
             NULL, NULL, FALSE, NULL, NULL, NULL, NULL, &pi);
     }
 }
-
 
 void AddContactByNumber(TCHAR * pNumber) {
     HRESULT hr = S_OK;
@@ -212,14 +194,11 @@ void AddContactByNumber(TCHAR * pNumber) {
     IItem * pItem = NULL;
     IPOutlookApp2 * polApp;
 	BSTR bstrNumber;
-    HWND hWnd;
 
     hr = CoCreateInstance(__uuidof(Application), NULL, CLSCTX_INPROC_SERVER,
                           __uuidof(IPOutlookApp2), (LPVOID*) &polApp);
     CHR(hr);
-
-    hWnd = GetForegroundWindow();
-    hr = polApp->Logon((long)hWnd);
+    hr = polApp->Logon(NULL);
     CHR(hr);
 
     hr = polApp->CreateItem(olContactItem, (IDispatch**)&pContact);
@@ -233,7 +212,7 @@ void AddContactByNumber(TCHAR * pNumber) {
 
     CHR(hr);
 
-	hr = pItem->Edit(hWnd);
+	hr = pItem->Edit(NULL);
 
 Error:
     // cleanup

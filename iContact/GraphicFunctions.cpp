@@ -17,7 +17,6 @@ along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "stdafx.h"
 #include "GraphicFunctions.h"
-#include "macros.h"
 
 HFONT BuildFont(int iFontSize, BOOL bBold, BOOL bItalic) {
 	LOGFONT lf;
@@ -39,26 +38,6 @@ HFONT BuildFont(int iFontSize, BOOL bBold, BOOL bItalic) {
 	_tcsncpy (lf.lfFaceName, TEXT("Tahoma"), LF_FACESIZE);
 	//lf.lfFaceName[LF_FACESIZE-1] = L'\0';  // Ensure null termination
 	return CreateFontIndirect(&lf);
-}
-
-// **************************************************************************
-// Function Name: DrawRect
-// 
-// Purpose: Draws a rectangle with the coordinates and the color passed in
-//
-// Arguments:
-//    IN HDC      hdc - DC for drawing
-//    IN LPRECT   prc - Area to draw the rectangle
-//    IN COLORREF clr - color to draw the rectangle
-//
-// Return Values:
-//    NONE
-//
-
-void DrawRect(HDC hdc, LPRECT prc, COLORREF clr) {
-    COLORREF clrSave = SetBkColor(hdc, clr);
-    ExtTextOut(hdc,0,0,ETO_OPAQUE,prc,NULL,0,NULL);
-    SetBkColor(hdc, clrSave);
 }
 
 void DrawGradientGDI(HDC tdc, RECT iRect, 
@@ -234,7 +213,7 @@ HBITMAP HBITMAPFromImage (IN IImage * pImage, IN COLORREF crBackColor) {
     bmi.bmiHeader.biWidth       = ii.Width;
     bmi.bmiHeader.biHeight      = ii.Height;
     bmi.bmiHeader.biPlanes      = 1;
-    bmi.bmiHeader.biBitCount    = 24;
+    bmi.bmiHeader.biBitCount    = (SHORT) max(16, GetDeviceCaps(hDC, BITSPIXEL));
     bmi.bmiHeader.biCompression = BI_RGB;
 
     hbmNew = CreateDIBSection(hDC, &bmi, DIB_RGB_COLORS, &pv, NULL, 0);
@@ -303,8 +282,7 @@ HRESULT GetBitmapFromStream(IStream* pStream, HBITMAP* phBitmap,
     CBR(pStream != NULL && phBitmap != NULL && puWidth != NULL && puHeight != NULL);
 
     // Use a little imaging help
-    hr = CoCreateInstance(CLSID_ImagingFactory, NULL, CLSCTX_INPROC_SERVER,
-        IID_IImagingFactory, (void**) &pFactory);
+    hr = CoCreateInstance(CLSID_ImagingFactory, NULL, CLSCTX_INPROC_SERVER, IID_IImagingFactory, (void**) &pFactory);
     CHR(hr);
     
     hr = pFactory->CreateImageFromStream(pStream, &pImage);
@@ -344,163 +322,22 @@ Error:
 
 }
 
-// http://www.koders.com/cpp/fid743B2B2FCDBFE91584C329A50766C1155709DA1B.aspx
-/*****************************************************************************
- * Copyright (c) 2000, 2005 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *
- * Contributors:
- *     IBM Corporation - initial API and implementation
- *****************************************************************************/
-/*
-	Call IImageEncoder::GetEncodeSink to retrieve an IImageSink interface. The
-	IImageSink interface is implemented as follows: 
+// **************************************************************************
+// Function Name: DrawRect
+// 
+// Purpose: Draws a rectangle with the coordinates and the color passed in
+//
+// Arguments:
+//    IN HDC      hdc - DC for drawing
+//    IN LPRECT   prc - Area to draw the rectangle
+//    IN COLORREF clr - color to draw the rectangle
+//
+// Return Values:
+//    NONE
+//
 
-		a. Call IImageSink::BeginSink to negotiate the values contained in the
-		   ImageInfo structure for encoding the current frame. 
-		b. Call IImageSink::SetPalette to pass color palette information about 
-		   the current image frame to the image sink. 
-		c. If you need to pass property data to the image sink, you can 
-		   optionally call IImageSink::GetPropertyBuffer to obtain a buffer 
-		   that will contain the property data. 
-		d. If GetPropertyBuffer is called above, you must next call 
-		   IImageSink::PushPropertyItems to transfer the property data to the 
-		   image sink. 
-		   The buffer that was allocated by GetPropertyBuffer must be 
-		   deallocated in the implementation for PushPropertyItems. 
-		e. Call IImageSink::PushPixelData or IImageSink::GetPixelDataBuffer to
-		   begin the data transfer, depending on how the image data is stored 
-		   in the source: 
-		   * If the image source has allocated memory for the image, 
-		     use PushPixelData.
-		   * If the image source has not allocated memory for the image, 
-		     use GetPixelDataBuffer. For each call to GetPixelDataBuffer, 
-		     IImageSink::ReleasePixelDataBuffer must also be called. 
-		f. Call ImageSink::EndSink to complete the encoding process. 
-		g. Call ImageSink::Release to free the IImagesink interface. 				
-*/	
-
-HRESULT SavePNG(HDC hDC, HBITMAP hBitmap, const TCHAR* szPath, 
-				IImagingFactory * pFactory) {
-
-	HRESULT hr;
-
-	// Set the particular encoder to use
-	TCHAR * pszMimeType = TEXT("image/png");
-
-	UINT count;
-	ImageCodecInfo* imageCodecInfo = NULL;
-	hr = pFactory->GetInstalledEncoders(&count, &imageCodecInfo);
-	CHR(hr);
-	CBR(count > 0);
-
-	CLSID encoderClassId;
-	for (int i = 0; i < (int)count; i++) {
-		if (wcscmp(imageCodecInfo[i].MimeType, pszMimeType) == 0) {
-			encoderClassId = imageCodecInfo[i].Clsid;
-			free(imageCodecInfo);
-			break;
-		} 
-		else {
-			continue;
-		}
-	}
-
-	IImageEncoder* imageEncoder = NULL;
-	hr = pFactory->CreateImageEncoderToFile(&encoderClassId, szPath,
-		&imageEncoder);
-	CHR(hr);
-
-	IImageSink* imageSink = NULL;
-	hr = imageEncoder->GetEncodeSink(&imageSink);
-	CHR(hr);
-
-	BITMAP bm;
-	GetObject ((HGDIOBJ)hBitmap, sizeof(BITMAP), &bm);
-	ImageInfo* imageInfo = new ImageInfo();
-	imageInfo->Height = bm.bmHeight;
-	imageInfo->Width = bm.bmWidth;
-	//imageInfo->RawDataFormat = ImageFormatMemoryBMP;// ????
-	imageInfo->Flags |= SinkFlagsTopDown | SinkFlagsFullWidth;
-	imageInfo->Xdpi = 192;
-	imageInfo->Ydpi = 192;
-
-	// Get pixel format from hBitmap
-	switch (bm.bmBitsPixel) {
-		case 1:
-			imageInfo->PixelFormat = PixelFormat1bppIndexed;
-			break;
-
-		case 4:
-			imageInfo->PixelFormat = PixelFormat4bppIndexed;
-			break;
-
-		case 8:
-			imageInfo->PixelFormat = PixelFormat8bppIndexed;
-			break;
-
-		case 16:
-			imageInfo->PixelFormat = PixelFormat16bppARGB1555;
-			imageInfo->Flags |= SinkFlagsHasAlpha;
-			break;
-
-		case 24:
-			imageInfo->PixelFormat = PixelFormat24bppRGB;
-			break;
-
-		default:
-			imageInfo->PixelFormat = PixelFormat32bppARGB;
-			imageInfo->Flags |= SinkFlagsHasAlpha;
-			break;
-	}
-
-	hr = imageSink->BeginSink(imageInfo, NULL);
-	CHR(hr);
-
-	ColorPalette* palette = (ColorPalette*)malloc(sizeof(ColorPalette));
-	palette->Count = 0;
-	if (imageInfo->Flags & SinkFlagsHasAlpha)
-		palette->Flags = PALFLAG_HASALPHA;
-
-	hr = imageSink->SetPalette(palette);
-	CHR(hr);
-					
-	BitmapData* bmData = new BitmapData();
-	bmData->Height = bm.bmHeight;
-	bmData->Width = bm.bmWidth;
-	bmData->Scan0 = bm.bmBits;
-	bmData->PixelFormat = imageInfo->PixelFormat;
-
-	UINT bitsPerLine = imageInfo->Width * bm.bmBitsPixel;
-	UINT bitAlignment = sizeof(LONG) * 8;
-
-	// The image buffer is always padded to LONG boundaries
-	UINT bitStride = bitAlignment * (bitsPerLine / bitAlignment);
-
-	// Add a bit more for the leftover values
-	if ((bitsPerLine % bitAlignment) != 0) bitStride += bitAlignment;
-
-	bmData->Stride = bitStride / 8;
-
-	RECT rect;
-	SetRect(&rect, 0, 0, bm.bmWidth, bm.bmHeight);
-
-	hr = imageSink->PushPixelData(&rect, bmData, TRUE);
-	CHR(hr);
-
-	hr = imageSink->EndSink(S_OK);
-	CHR(hr);
-
-	imageSink->Release();
-	hr = imageEncoder->TerminateEncoder();
-	CHR(hr);
-
-	hr = S_OK;
-
-Error:
-	RELEASE_OBJ(imageSink);
-	return hr;
+void DrawRect(HDC hdc, LPRECT prc, COLORREF clr) {
+    COLORREF clrSave = SetBkColor(hdc, clr);
+    ExtTextOut(hdc,0,0,ETO_OPAQUE,prc,NULL,0,NULL);
+    SetBkColor(hdc, clrSave);
 }

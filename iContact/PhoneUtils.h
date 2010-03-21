@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************/
 
+#include <phone.h>
+
 void Call(TCHAR * number, TCHAR * name);
 void SendSMS(TCHAR * number, TCHAR * name);
 void SendEMail(const TCHAR * account, TCHAR * to);
