@@ -1,20 +1,3 @@
-/*******************************************************************
-This file is part of iContact.
-
-iContact is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-iContact is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with iContact.  If not, see <http://www.gnu.org/licenses/>.
-*******************************************************************/
-
 //
 // iContactPPC.RC2 - resources Microsoft Visual C++ does not edit directly
 //
@@ -32,4 +15,21 @@ HI_RES_AWARE CEUX {1}	// turn off the emulation layer
 			// Remove this resource to enable pixel-
 			// doubling on platforms that support it
 /////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// SHMENUBAR
+//
+
+IDR_MENU SHMENUBAR DISCARDABLE
+BEGIN
+    IDR_MENU, 
+    2,
+
+    I_IMAGENONE, IDM_OK, TBSTATE_ENABLED, TBSTYLE_BUTTON | TBSTYLE_AUTOSIZE,
+    IDS_OK, 0, NOMENU,
+    
+    I_IMAGENONE, IDM_HELP, TBSTATE_ENABLED, TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE,
+    IDS_HELP, 0, 0,
+END
 

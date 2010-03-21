@@ -1,63 +1,36 @@
-/*******************************************************************
-This file is part of iContact.
-
-iContact is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-iContact is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with iContact.  If not, see <http://www.gnu.org/licenses/>.
-*******************************************************************/
-
 #pragma once
 
 // Define this when taking screenshots to get a nice titlebar
 //#define DEBUG_SCREENSHOTS
 
 // Default heights and spacing of icons
+#define TITLE_BAR_HEIGHT        16
 #define TITLE_BAR_ICON_SPACING  3
 
-// Position and size of elements within skin.png
-#define TITLE_BAR_HEIGHT        16
-#define TITLE_BAR_WIDTH         240
-#define BACKGROUND_X_OFFSET     208
-#define BACKGROUND_WIDTH        4
-#define FOREGROUND_X_OFFSET     212
-#define FOREGROUND_WIDTH        4
-#define SIGNAL_X_OFFSET         0
-#define SIGNAL_WIDTH            20
-#define SIGNAL_OFF_X_OFFSET     20
-#define SIGNAL_OFF_WIDTH        20
-#define SPEAKER_OFF_X_OFFSET    40
-#define SPEAKER_OFF_WIDTH       17
-#define SPEAKER_ON_X_OFFSET     61
-#define SPEAKER_ON_WIDTH        16
-#define VIBRATE_X_OFFSET        84
-#define VIBRATE_WIDTH           17
-#define BLUETOOTH_X_OFFSET      107
-#define BLUETOOTH_WIDTH         11
-#define WIFI_X_OFFSET           127
-#define WIFI_WIDTH              21
-#define LOCK_X_OFFSET           149
-#define LOCK_WIDTH              8
-#define ALARM_X_OFFSET          156
-#define ALARM_WIDTH             10
-#define A2DP_X_OFFSET           169
-#define A2DP_WIDTH              17
-#define CONNECTION_X_OFFSET     188
-#define CONNECTION_WIDTH        17
-#define BATTERY_X_OFFSET        219
+// Position of elements within skin.png
+#define BATTERY_X_OFFSET        0
 #define BATTERY_WIDTH           21
+#define SPEAKER_OFF_X_OFFSET    23
+#define SPEAKER_OFF_WIDTH       17
+#define SPEAKER_ON_X_OFFSET     44
+#define SPEAKER_ON_WIDTH        16
+#define VIBRATE_X_OFFSET        67
+#define VIBRATE_WIDTH           17
+#define BLUETOOTH_X_OFFSET      90
+#define BLUETOOTH_WIDTH         11
+#define WIFI_X_OFFSET           110
+#define WIFI_WIDTH              21
+#define LOCK_X_OFFSET           132
+#define LOCK_WIDTH              8
+#define ALARM_X_OFFSET          139
+#define ALARM_WIDTH             10
+#define A2DP_X_OFFSET           152
+#define A2DP_WIDTH              17
+#define CONNECTION_X_OFFSET     171
+#define CONNECTION_WIDTH        17
 
 // Window Message for notifications of changes
-#define WM_TITLEBAR             WM_USER + 99
-#define WM_REGISTRY             WM_USER + 100
+#define WM_TITLEBAR             WM_USER + 1
 
 // Which values to refresh
 #define TB_SIGNAL_MASK          0x01
@@ -133,6 +106,5 @@ along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 ////////////////////////////////////////////////////////////////////////////////
 // public functions
 void InitTitlebar(HWND);
-void DestroyTitlebar();
 void RefreshTitlebar(UINT);
-void DrawTitlebarOn(HDC, RECT, HDC, HFONT, const TCHAR * = NULL);
+void DrawTitlebarOn(HDC, RECT, HDC, COLORREF, COLORREF, COLORREF, COLORREF);

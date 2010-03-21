@@ -1,20 +1,3 @@
-/*******************************************************************
-This file is part of iContact.
-
-iContact is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-iContact is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with iContact.  If not, see <http://www.gnu.org/licenses/>.
-*******************************************************************/
-
 // stdafx.h : include file for standard system include files,
 // or project specific include files that are used frequently, but
 // are changed infrequently
@@ -26,9 +9,7 @@ along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 #pragma comment(linker, "/nodefaultlib:libcd.lib")
 
 // NOTE - this value is not strongly correlated to the Windows CE OS version being targeted
-#ifndef WINVER
 #define WINVER _WIN32_WCE
-#endif
 
 #include <ceconfig.h>
 #if defined(WIN32_PLATFORM_PSPC) || defined(WIN32_PLATFORM_WFSP)
@@ -38,6 +19,9 @@ along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 #ifdef _CE_DCOM
 #define _ATL_APARTMENT_THREADED
 #endif
+
+#include <windows.h>
+#include <commctrl.h>
 
 #include <aygshell.h>
 #pragma comment(lib, "aygshell.lib") 
@@ -74,3 +58,6 @@ along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 #endif
 
 #include <altcecrt.h>
+
+// TODO: reference additional headers your program requires here
+#pragma comment( lib ,"phone.lib" )
