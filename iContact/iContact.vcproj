@@ -1,23 +1,22 @@
 <?xml version="1.0" encoding="windows-1250"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="9,00"
 	Name="iContact"
-	ProjectGUID="{F40E7F97-9B3B-4B67-979B-C2E93D1E21E5}"
-	RootNamespace="iContact"
+	ProjectGUID="{0CB2FE85-F41A-438B-B631-2EA2851698D5}"
 	Keyword="Win32Proj"
-	TargetFrameworkVersion="196613"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
-			Name="Windows Mobile 5.0 Pocket PC SDK (ARMV4I)"
+			Name="Pocket PC 2003 (ARMV4)"
 		/>
 	</Platforms>
 	<ToolFiles>
 	</ToolFiles>
 	<Configurations>
 		<Configuration
-			Name="Debug|Windows Mobile 5.0 Pocket PC SDK (ARMV4I)"
+			Name="Debug|Pocket PC 2003 (ARMV4)"
 			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
 			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="1"
@@ -45,7 +44,7 @@
 				PreprocessorDefinitions="_DEBUG;_WIN32_WCE=$(CEVER);UNDER_CE;$(PLATFORMDEFINES);WINCE;DEBUG;_WINDOWS;$(ARCHFAM);$(_ARCHFAM_);_UNICODE;UNICODE;POCKETPC2003_UI_MODEL"
 				MinimalRebuild="true"
 				RuntimeLibrary="1"
-				UsePrecompiledHeader="0"
+				UsePrecompiledHeader="2"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -63,15 +62,13 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions=" /subsystem:windowsce,5.01"
+				AdditionalOptions=" /subsystem:windowsce,4.20 /machine:ARM /ARMPADCODE"
 				OutputFile="$(OutDir)/iContact.exe"
 				LinkIncremental="2"
 				DelayLoadDLLs="$(NOINHERIT)"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(OutDir)/iContact.pdb"
 				SubSystem="0"
-				StackReserveSize="65536"
-				StackCommitSize="4096"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
 			/>
@@ -103,11 +100,12 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Release|Windows Mobile 5.0 Pocket PC SDK (ARMV4I)"
+			Name="Release|Pocket PC 2003 (ARMV4)"
 			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
 			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="1"
 			CharacterSet="1"
+			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -128,12 +126,17 @@
 				Name="VCCLCompilerTool"
 				ExecutionBucket="7"
 				Optimization="2"
-				FavorSizeOrSpeed="2"
+				ImproveFloatingPointConsistency="false"
+				FavorSizeOrSpeed="1"
+				WholeProgramOptimization="true"
 				PreprocessorDefinitions="NDEBUG;_WIN32_WCE=$(CEVER);UNDER_CE;$(PLATFORMDEFINES);WINCE;_WINDOWS;$(ARCHFAM);$(_ARCHFAM_);_UNICODE;UNICODE;POCKETPC2003_UI_MODEL"
 				RuntimeLibrary="0"
-				UsePrecompiledHeader="0"
+				FloatingPointModel="2"
+				UsePrecompiledHeader="2"
 				WarningLevel="3"
 				DebugInformationFormat="3"
+				CompileAs="2"
+				EnableFloatingPointEmulation="false"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -149,17 +152,18 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions=" /subsystem:windowsce,5.01"
+				AdditionalOptions=" /subsystem:windowsce,4.20 /machine:ARM /ARMPADCODE"
+				AdditionalDependencies="phone.lib"
 				OutputFile="$(OutDir)/iContact.exe"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories=""
 				DelayLoadDLLs="$(NOINHERIT)"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(OutDir)/iContact.pdb"
 				SubSystem="0"
-				StackReserveSize="65536"
-				StackCommitSize="4096"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
+				LinkTimeCodeGeneration="1"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
 			/>
@@ -200,11 +204,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\CSettings.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\FileUtils.cpp"
+				RelativePath=".\ContactList.cpp"
 				>
 			</File>
 			<File
@@ -216,42 +216,14 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ListData.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ListDataCallLog.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ListDataPoom.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\PhoneUtils.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\RegistryUtils.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Sensor.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ShortcutUtils.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ShortcutUtilsData.cpp"
+				RelativePath=".\poom.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
-					Name="Debug|Windows Mobile 5.0 Pocket PC SDK (ARMV4I)"
+					Name="Debug|Pocket PC 2003 (ARMV4)"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -259,7 +231,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Windows Mobile 5.0 Pocket PC SDK (ARMV4I)"
+					Name="Release|Pocket PC 2003 (ARMV4)"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -268,7 +240,7 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\Titlebar.cpp"
+				RelativePath=".\ThemeSupport.cpp"
 				>
 			</File>
 		</Filter>
@@ -278,11 +250,7 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\CSettings.h"
-				>
-			</File>
-			<File
-				RelativePath=".\FileUtils.h"
+				RelativePath=".\ContactList.h"
 				>
 			</File>
 			<File
@@ -294,27 +262,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ListData.h"
+				RelativePath=".\poom.h"
 				>
 			</File>
 			<File
-				RelativePath=".\ListDataCallLog.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ListDataPoom.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Macros.h"
-				>
-			</File>
-			<File
-				RelativePath=".\PhoneUtils.h"
-				>
-			</File>
-			<File
-				RelativePath=".\RegistryUtils.h"
+				RelativePath=".\resource.h"
 				>
 			</File>
 			<File
@@ -322,19 +274,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Sensor.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ShortcutUtils.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ShortcutUtilsData.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Skin.h"
+				RelativePath=".\SimpleIni.h"
 				>
 			</File>
 			<File
@@ -342,11 +282,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Titlebar.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Version.h"
+				RelativePath=".\ThemeSupport.h"
 				>
 			</File>
 		</Filter>
@@ -356,18 +292,25 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<File
-				RelativePath="..\data\iContact.ico"
+				RelativePath=".\icon2.ico"
 				>
+				<FileConfiguration
+					Name="Release|Pocket PC 2003 (ARMV4)"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\iContactppc.rc"
-				>
-			</File>
-			<File
-				RelativePath=".\iContactppc.rc2"
+				RelativePath=".\iContact.rc"
 				>
 			</File>
 		</Filter>
+		<File
+			RelativePath=".\ReadMe.txt"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
