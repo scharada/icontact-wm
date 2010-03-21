@@ -15,9 +15,8 @@ You should have received a copy of the GNU General Public License
 along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************/
 
-#include "stdafx.h"
-
-#include "resourceppc.h"
+#include <stdafx.h>
+#include <string.h>
 #include "CSettings.h"
 #include "Macros.h"
 #include "RegistryUtils.h"
@@ -47,33 +46,15 @@ CSettings::CSettings(void) {
 	LoadSetting(buffer, REGISTRY_MAXLENGTH, SZ_ICONTACT_REG_KEY,
         INI_FULLSCREEN_KEY, INI_FULLSCREEN_DEFAULT);
     this->doShowFullScreen = '1' == buffer[0];
-   
-	LoadSetting(buffer, REGISTRY_MAXLENGTH, SZ_ICONTACT_REG_KEY,
-        INI_ENABLE_SENSOR_KEY, INI_ENABLE_SENSOR_DEFAULT);
-    this->doEnableSensor = '1' == buffer[0];
-
-	LoadSetting(buffer, REGISTRY_MAXLENGTH, SZ_ICONTACT_REG_KEY,
-		INI_GRAVITY_KEY, INI_GRAVITY_DEFAULT);
-	this->gravity = min(100, max(-100, _ttol(buffer))) / (float)100.0;
-
+    
     LoadSetting(buffer, MAX_PATH, SZ_ICONTACT_REG_KEY,
         INI_SKIN_KEY, INI_SKIN_DEFAULT);
 	if (buffer[0] == '\\') 
 		StringCchCopy(this->skin_path, MAX_PATH, buffer);
 	else
 	    GetCurDirFilename(this->skin_path, buffer, TEXT("png"));
+	// TODO: check if skin exists
 
-	// use the default skin anyway, if the specified skin can't be found
-	if (!FileExists(this->skin_path)) {
-		GetCurDirFilename(this->skin_path, INI_SKIN_DEFAULT, TEXT("png"));
-
-		// die if the skin _still_ can't be found
-		if (!FileExists(this->skin_path)) {
-			HWND hWnd = FindWindow (SZ_APP_NAME, NULL);
-			MessageBox(hWnd, TEXT("No skin found"), SZ_APP_NAME, 0);
-			PostMessage(hWnd, WM_CLOSE, 0, 0);
-		}
-	}
 
     LoadSetting(buffer, MAX_PATH, SZ_ICONTACT_REG_KEY,
         INI_LANGUAGE_KEY, INI_LANGUAGE_DEFAULT);
@@ -85,46 +66,44 @@ CSettings::CSettings(void) {
     //////////////////////////////////////////////////
     // Language
     const struct LanguageSetting languageSettings[] = {
-		&this->favorites_default, TEXT("favorites="), TEXT("Favorites"),
-        &this->alphabet, TEXT("alphabet="), TEXT(""),
-        &this->mobile_string, TEXT("mobile="), TEXT("Mobile"),
-        &this->home_string, TEXT("home="), TEXT("Home"),
-        &this->work_string, TEXT("work="), TEXT("Work"),
-        &this->company_string, TEXT("company="), TEXT("Company"),
-        &this->car_string, TEXT("car="), TEXT("Car"),
-        &this->assistant_string, TEXT("assistant="), TEXT("Assistant"),
-        &this->fax_string, TEXT("fax="), TEXT("Fax"),
-        &this->pager_string, TEXT("pager="), TEXT("Pager"),
-        &this->radio_string, TEXT("radio="), TEXT("Radio"),
-        &this->email_string, TEXT("email="), TEXT("E-mail"),
-        &this->sms_string, TEXT("sms="), TEXT("SMS"),
-        &this->today_string, TEXT("today="), TEXT("Today"),
-        &this->yesterday_string, TEXT("yesterday="), TEXT("Yesterday"),
-        &this->sunday_string, TEXT("sunday="), TEXT("Sunday"),
-        &this->monday_string, TEXT("monday="), TEXT("Monday"),
-        &this->tuesday_string, TEXT("tuesday="), TEXT("Tuesday"),
-        &this->wednesday_string, TEXT("wednesday="), TEXT("Wednesday"),
-        &this->thursday_string, TEXT("thursday="), TEXT("Thursday"),
-        &this->friday_string, TEXT("friday="), TEXT("Friday"),
-        &this->saturday_string, TEXT("saturday="), TEXT("Saturday"),
-        &this->older_string, TEXT("older="), TEXT("Older"),
-        &this->date_string, TEXT("date="), TEXT("Date"),
-        &this->duration_string, TEXT("duration="), TEXT("Duration"),
-        &this->seconds_string, TEXT("seconds="), TEXT("Seconds"),
-        &this->outgoing_string, TEXT("outgoing="), TEXT("Outgoing Call"),
-        &this->missed_string, TEXT("missed="), TEXT("Missed Call"),
-        &this->incoming_string, TEXT("incoming="), TEXT("Incoming Call"),
-        &this->unknown_string, TEXT("unknown="), TEXT("Unknown"),
-        &this->returncall_string, TEXT("returncall="), TEXT("Return Call"),
-        &this->savecontact_string, TEXT("savecontact="), TEXT("Save Contact"),
-        &this->managecontact_string, TEXT("managecontact="), TEXT("Manage Contact"),
-        &this->editcontact_string, TEXT("editcontact="), TEXT("Edit Contact"),
-        &this->recents_string, TEXT("recents="), TEXT("Recents"),
-        &this->allcontacts_string, TEXT("allcontacts="), TEXT("All Contacts"),
-        &this->details_string, TEXT("details="), TEXT("Details"),
-        &this->categories_string, TEXT("categories="), TEXT("Categories"),
-		&this->createshortcut_string, TEXT("createshortcut="), TEXT("Create Shortcut"),
-		&this->removeshortcut_string, TEXT("removeshortcut="), TEXT("Remove Shortcut")
+		&this->favorites_default, TEXT("favorites"), TEXT("Favorites"),
+        &this->alphabet, TEXT("alphabet"), TEXT(""),
+        &this->mobile_string, TEXT("mobile"), TEXT("Mobile"),
+        &this->home_string, TEXT("home"), TEXT("Home"),
+        &this->work_string, TEXT("work"), TEXT("Work"),
+        &this->company_string, TEXT("company"), TEXT("Company"),
+        &this->car_string, TEXT("car"), TEXT("Car"),
+        &this->assistant_string, TEXT("assistant"), TEXT("Assistant"),
+        &this->fax_string, TEXT("fax"), TEXT("Fax"),
+        &this->pager_string, TEXT("pager"), TEXT("Pager"),
+        &this->radio_string, TEXT("radio"), TEXT("Radio"),
+        &this->email_string, TEXT("email"), TEXT("E-mail"),
+        &this->sms_string, TEXT("sms"), TEXT("SMS"),
+        &this->today_string, TEXT("today"), TEXT("Today"),
+        &this->yesterday_string, TEXT("yesterday"), TEXT("Yesterday"),
+        &this->sunday_string, TEXT("sunday"), TEXT("Sunday"),
+        &this->monday_string, TEXT("monday"), TEXT("Monday"),
+        &this->tuesday_string, TEXT("tuesday"), TEXT("Tuesday"),
+        &this->wednesday_string, TEXT("wednesday"), TEXT("Wednesday"),
+        &this->thursday_string, TEXT("thursday"), TEXT("Thursday"),
+        &this->friday_string, TEXT("friday"), TEXT("Friday"),
+        &this->saturday_string, TEXT("saturday"), TEXT("Saturday"),
+        &this->older_string, TEXT("older"), TEXT("Older"),
+        &this->date_string, TEXT("date"), TEXT("Date"),
+        &this->duration_string, TEXT("duration"), TEXT("Duration"),
+        &this->seconds_string, TEXT("seconds"), TEXT("Seconds"),
+        &this->outgoing_string, TEXT("outgoing"), TEXT("Outgoing Call"),
+        &this->missed_string, TEXT("missed"), TEXT("Missed Call"),
+        &this->incoming_string, TEXT("incoming"), TEXT("Incoming Call"),
+        &this->unknown_string, TEXT("unknown"), TEXT("Unknown"),
+        &this->returncall_string, TEXT("returncall"), TEXT("Return Call"),
+        &this->savecontact_string, TEXT("savecontact"), TEXT("Save Contact"),
+        &this->managecontact_string, TEXT("managecontact"), TEXT("Manage Contact"),
+        &this->editcontact_string, TEXT("editcontact"), TEXT("Edit Contact"),
+        &this->recents_string, TEXT("recents"), TEXT("Recents"),
+        &this->allcontacts_string, TEXT("allcontacts"), TEXT("All Contacts"),
+        &this->details_string, TEXT("details"), TEXT("Details"),
+        &this->categories_string, TEXT("categories"), TEXT("Categories"),
     };
 
 	// Read the file into this->language_data TCHAR array
@@ -136,41 +115,33 @@ CSettings::CSettings(void) {
     DWORD dwFileSize = min(2048, GetFileSize(hCache, NULL));
     DWORD dwBytesRead;
 
-    BOOL readOk = ReadFile(hCache, cbuffer, dwFileSize, &dwBytesRead, NULL);
+    ReadFile(hCache, cbuffer, dwFileSize, &dwBytesRead, NULL);
+    ASSERT(dwBytesRead == dwFileSize);
 
-    if (!readOk) {
-        // TODO: report error?
-        for (int i = 0; i < ARRAYSIZE(languageSettings); i++) {
-            *(languageSettings[i].ppSetting) = languageSettings[i].pszDefault;
-        }
+	::mbstowcs(this->language_data, cbuffer, 2048);
+
+	// Then set all the TCHAR * to the appropriate locations in that array
+	TCHAR * pStr;
+    for (int i = 0; i < ARRAYSIZE(languageSettings); i++) {
+
+		pStr = _tcsstr(this->language_data, languageSettings[i].pszName);
+
+		if (pStr == NULL) {
+			*(languageSettings[i].ppSetting) = languageSettings[i].pszDefault;
+			continue;
+		}
+
+		// we want what's after the equal, not what's before it
+        *(languageSettings[i].ppSetting) = _tcsstr(pStr, TEXT("=")) + 1;
     }
-    else {
-        ASSERT(dwFileSize == dwBytesRead);
-    	::mbstowcs(this->language_data, cbuffer, 2048);
 
-	    // Then set all the TCHAR * to the appropriate locations in that array
-	    TCHAR * pStr = 0;
-        for (int i = 0; i < ARRAYSIZE(languageSettings); i++) {
-
-		    pStr = _tcsstr(this->language_data, languageSettings[i].pszName);
-
-		    if (pStr == NULL) {
-			    *(languageSettings[i].ppSetting) = languageSettings[i].pszDefault;
-			    continue;
-		    }
-
-		    // we want what's after the equal, not what's before it
-            *(languageSettings[i].ppSetting) = _tcsstr(pStr, TEXT("=")) + 1;
-        }
-
-	    // Then add nulls in the appropriate locations 
-	    // (replace '=', '\r', '\n', with 0)
-	    // (the other data in the file is then just junk)
-	    for (pStr = this->language_data; pStr < this->language_data + 2048; pStr++) {
-		    if (*pStr == '\r' || *pStr == '\n' || *pStr == '=')
-			    *pStr = 0;
-	    }
-    }
+	// Then add nulls in the appropriate locations 
+	// (replace '=', '\r', ,\n, with 0
+	// (the other data in the file is then just junk)
+	for (pStr = this->language_data; pStr < this->language_data + 2048; pStr++) {
+		if (*pStr == '\r' || *pStr == '\n')
+			*pStr = 0;
+	}
 
     //////////////////////////////////////////////////
 	// Special handling for "Favorites" category:

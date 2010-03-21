@@ -391,14 +391,6 @@
 			<File
 				RelativePath="..\iContact\FileUtils.cpp"
 				>
-				<FileConfiguration
-					Name="Release|Windows Mobile 5.0 Pocket PC SDK (ARMV4I)"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\iContact\PhoneUtils.cpp"

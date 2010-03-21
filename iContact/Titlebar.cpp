@@ -1,5 +1,5 @@
 /*******************************************************************
-This file is part of iContact.
+This file is part of iDialer.
 
 iContact is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Titlebar.h"
 
-int nBattery; //0-34
+int nBattery; //0-17
 int nBars; //0-5
 TCHAR szCarrier[50];
 TCHAR szTime[12];
@@ -118,7 +118,7 @@ void RefreshTitlebar(UINT uWhich) {
     StringCchPrintf(szTime, 12, TEXT("12:38 PM"));
     StringCchPrintf(szCarrier, 50, TEXT("AT&T"));
     nBars = 3;
-    nBattery = 19;
+    nBattery = 10;
     bVibrate = false;
     bSpeakerOn = true;
     bBluetooth = true;
@@ -155,15 +155,17 @@ void RefreshTitlebar(UINT uWhich) {
     }
 
     // Battery level & charging state
+    // http://msdn.microsoft.com/en-us/library/aa456240.aspx
     if (uWhich & TB_BATTERY_MASK) {
-        SYSTEM_POWER_STATUS_EX2 sps = {0};
-        DWORD result = GetSystemPowerStatusEx2(&sps,
-            sizeof(SYSTEM_POWER_STATUS_EX2), false);
-
-        if (result > 0) {
-            //nBattery = 0-34
-            nBattery = min(34, MulDiv(sps.BatteryLifePercent, 34, 100));
-            bCharging = (sps.BatteryFlag & BATTERY_FLAG_CHARGING) > 0;
+        hr = RegistryGetDWORD(
+            SN_POWERBATTERYSTRENGTH_ROOT, 
+            SN_POWERBATTERYSTRENGTH_PATH, 
+            SN_POWERBATTERYSTRENGTH_VALUE,
+            &dw);
+        if (SUCCEEDED(hr)) {
+            nBattery = (dw & SN_POWERBATTERYSTRENGTH_BITMASK) >> 16;
+            nBattery = (int)(nBattery * 0.21 + 0.5);
+            bCharging = (dw & BATTERY_STATE_CHARGING) != 0;
         }
     }
 
@@ -246,7 +248,7 @@ void DrawTitlebarOn(HDC hdc, RECT rTitlebar, HDC hdcSkin,
     StretchBlt(hdc, rTitlebar.left, rTitlebar.top, 
         rTitlebar.right - rTitlebar.left, rTitlebarHeight,
         hdcSkin, BACKGROUND_X_OFFSET * scale, 0, 
-		BACKGROUND_WIDTH * scale, TITLE_BAR_HEIGHT * scale,
+		BACKGROUND_WIDTH * scale, rTitlebarHeight,
         SRCCOPY);
 
     // LEFT SIDE
@@ -291,8 +293,12 @@ void DrawTitlebarOn(HDC hdc, RECT rTitlebar, HDC hdcSkin,
 
     // copy the "full" section of the battery
     if (nBattery) {
+        rc.top = 5 * scale;
+        rc.bottom = rc.top + 6 * scale;
+        rc.left = x + 3 * scale;
+        rc.right = rc.left + nBattery * scale;
         StretchBlt(hdc, rTitlebar.right - (BATTERY_WIDTH - 1) * scale, y,
-            nBattery * scale / 2, rTitlebarHeight,
+            nBattery * scale, rTitlebarHeight,
             hdcSkin, (BATTERY_X_OFFSET + 1) * scale, 0,
 			1, TITLE_BAR_HEIGHT * scale, SRCCOPY);
     }

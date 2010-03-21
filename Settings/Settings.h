@@ -95,16 +95,6 @@ enum PopupType {
 
 
 //----------------------------------------------------------------------
-// EDB constants
-//
-#define DB_VOL_FN TEXT("pim.vol")
-#define CATEGORY_DB_NAME TEXT("CategoryMainDB")
-
-#define MAKEPROP(n,t)    ((n<<16)|CEVT_##t)
-#define PROPID_CAT_NAME		MAKEPROP(0x02, LPWSTR)
-
-
-//----------------------------------------------------------------------
 // Function prototypes
 //
 HWND InitInstance(HINSTANCE, LPWSTR, int);
@@ -132,8 +122,8 @@ void InitializeSkin(HDC hdc);
 void InitializeCanvas();
 
 void DrawCanvasOn(HDC hdc, RECT rect);
-void DrawScreenOn(HDC, RECT);
-void DrawListDetailsOn(HDC hdc, RECT rect, RECT rClip, const TCHAR * value);
+void DrawScreenOn(HDC, HDC, RECT);
+void DrawListDetailsOn(HDC hdc, RECT rItem, const TCHAR * value);
 void DrawRect(HDC hdc, LPRECT prc, COLORREF clr);
 
 void ScrollBar(int);

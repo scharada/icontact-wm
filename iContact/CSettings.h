@@ -20,6 +20,10 @@ along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 #define SZ_ICONTACT_REG_KEY         TEXT("Software\\Supware.net\\iContact")
 #define REGISTRY_MAXLENGTH          32
 
+#define MAIN_SECTION                TEXT("main")
+#define LANGUAGE_SECTION            TEXT("language")
+#define SKIN_SECTION                TEXT("theme")
+
 #define INI_EMAIL_ACCOUNT_KEY       TEXT("EmailAccount")
 #define INI_EMAIL_ACCOUNT_DEFAULT   TEXT("")
 #define INI_FAVORITE_CAT_KEY        TEXT("FavoriteCategory")
@@ -30,16 +34,12 @@ along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 #define INI_EXIT_ON_ACTION_DEFAULT  TEXT("0")
 #define INI_FAST_GFX_KEY            TEXT("FastGraphics")
 #define INI_FAST_GFX_DEFAULT        TEXT("0")
-#define INI_ENABLE_SENSOR_KEY       TEXT("EnableSensor")
-#define INI_ENABLE_SENSOR_DEFAULT   TEXT("1")
 #define INI_SKIN_KEY                TEXT("Skin")
 #define INI_SKIN_DEFAULT            TEXT("default")
 #define INI_LANGUAGE_KEY            TEXT("Language")
 #define INI_LANGUAGE_DEFAULT        TEXT("english")
 #define INI_FULLSCREEN_KEY			TEXT("FullScreen")
 #define INI_FULLSCREEN_DEFAULT		TEXT("1")
-#define INI_GRAVITY_KEY				TEXT("Gravity")
-#define INI_GRAVITY_DEFAULT			TEXT("20")
 
 struct LanguageSetting {
     const TCHAR ** ppSetting;
@@ -60,14 +60,10 @@ public:
 	bool doExitOnMinimize;
     bool doFastGraphics;
 	bool doShowFullScreen;
-    bool doEnableSensor;
 
     // Strings
     TCHAR skin_path[MAX_PATH];
 	TCHAR language_data[2048];
-
-	// Physics
-	float gravity;
 
 	// These strings are just pointers to within language_data
 	const TCHAR * favorites_default;
@@ -108,6 +104,4 @@ public:
     const TCHAR * allcontacts_string;
     const TCHAR * details_string;
     const TCHAR * categories_string;
-	const TCHAR * createshortcut_string;
-	const TCHAR * removeshortcut_string;
 };

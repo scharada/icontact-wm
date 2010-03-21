@@ -22,8 +22,6 @@ along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#define EDB
-
 #pragma comment(linker, "/nodefaultlib:libc.lib")
 #pragma comment(linker, "/nodefaultlib:libcd.lib")
 

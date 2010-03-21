@@ -15,9 +15,8 @@ You should have received a copy of the GNU General Public License
 along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************/
 
-#define EDB
+#include "stdafx.h"
 #include <windows.h>
-#include <windbase.h>
 
 #include "ListDataCallLog.h"
 #include "PhoneUtils.h"
@@ -30,26 +29,7 @@ typedef HRESULT (*PHONESEEKCALLLOG)(HANDLE hdb, CALLLOGSEEK seek, DWORD iRecord,
 typedef HRESULT (*PHONECLOSECALLLOG)(HANDLE h);
 
 #include <phone.h>
-
-
-////////////////////////////////{
-
-
-#define MAKEPROP(n,t)    ((n<<16)|CEVT_##t)
-#define PROPID_CALLER_ID	MAKEPROP(0x06, LPWSTR)
-#define PROPID_CALLER_NAME  MAKEPROP(0x07, LPWSTR)
-#define PROPID_CALLER_TYPE  MAKEPROP(0x0a, LPWSTR)
-#define PROPID_START_TIME	MAKEPROP(0x02, FILETIME)
-#define PROPID_END_TIME		MAKEPROP(0x03, FILETIME)
-#define PROPID_IOM			MAKEPROP(0x04, I4)
-
-#define DB_VOL_FN		 TEXT("pim.vol")
-#define CALLLOG_DB_NAME  TEXT("clog.db")
-////////////////////////////////}
-
-
-// benchmark the long call log loading function
-//#define BENCHMARK_LOAD_TIME
+//#pragma comment( lib, "phone.lib" )
 
 UINT _getDaySerial(const SYSTEMTIME * st);
 void _fillSystemTimeFromSerial(SYSTEMTIME * st, UINT userial);
@@ -62,198 +42,15 @@ void _printDuration(TCHAR * str, int strLength, FILETIME ftStart,
 // *************************************************
 // These functions are for the main Recents list
 // *************************************************
-CEGUID guid = {0};
 
 HRESULT RecentsPopulate(DataItem * parent, void (*adder)(DataItem*),
-                        CSettings * pSettings) {
-    HRESULT hr = S_OK;
-
-    CEOID oid = 0;
-    HANDLE hdb = 0;
-    CEPROPVAL * pRecord = NULL;
-
-    DataItem dataPrev = {0};
-    DataItem data = {0};
-
-    data.isFavorite = false;
-    data.type = diListItem;
-
-#ifdef BENCHMARK_LOAD_TIME
-    DWORD tTime1 = ::GetTickCount();
-#endif
-    
-    // these are for detecting repeating items
-    TCHAR pszHash1[PRIMARY_TEXT_LENGTH*2] = {0};
-    TCHAR pszHash2[PRIMARY_TEXT_LENGTH*2] = {0};
-    int repeats = 0;
-
-    COLORREF rgbPrimary = RGB(255, 255, 255);
-
-	if (!guid.Data1) {
-		CeMountDBVolEx(&guid, DB_VOL_FN, NULL, OPEN_EXISTING);
-	}
-
-	SORTORDERSPECEX sort = {0};
-	sort.wVersion = SORTORDERSPECEX_VERSION;
-	sort.wNumProps = 1;
-	sort.wKeyFlags = 0;
-	sort.rgPropID[0] = PROPID_START_TIME;
-	sort.rgdwFlags[0] = CEDB_SORT_DESCENDING;
-
-    hdb = CeOpenDatabaseInSession(NULL, &guid, &oid, CALLLOG_DB_NAME,
-		&sort, CEDB_AUTOINCREMENT, NULL);
-
-    if (hdb == INVALID_HANDLE_VALUE) {
-        //DWORD error = GetLastError();
-        goto Error;
-    }
-    
-	// This is not needed with CEDB_AUTOINCREMENT flag set
-	//oid = CeSeekDatabaseEx(hdb, CEDB_SEEK_BEGINNING, 0, 0, 0);
-
-#ifdef BENCHMARK_LOAD_TIME
-    DWORD tTime2 = ::GetTickCount();
-#endif
-
-	DWORD  dwBufSize = 0;
-    WORD   wNumProps;
-
-	TCHAR * pszName;
-	TCHAR * pszNumber;
-	TCHAR * pszType;
-	FILETIME ftStart;
-	WORD iom;
-
-	WORD i;
-    for (i = 0; i < 300; i++) {
-        oid = CeReadRecordPropsEx(hdb, CEDB_ALLOWREALLOC, &wNumProps, NULL,
-			(LPBYTE *)&pRecord, &dwBufSize, NULL);
-		if (!oid)
-			break;
-
-		pszName = NULL;
-		pszNumber = NULL;
-		pszType = NULL;
-		iom = 0;
-
-		for (WORD iProp = 0; iProp < wNumProps; iProp++) {
-			switch(pRecord[iProp].propid) {
-				case PROPID_CALLER_ID:
-					pszNumber = pRecord[iProp].val.lpwstr;
-					break;
-
-				case PROPID_CALLER_NAME:
-					pszName = pRecord[iProp].val.lpwstr;
-					break;
-
-				case PROPID_CALLER_TYPE:
-					pszType = pRecord[iProp].val.lpwstr;
-					break;
-
-				case PROPID_START_TIME:
-					ftStart = pRecord[iProp].val.filetime;
-
-					// we'll store the oid as the low order word of the call time,
-					// this, along with the approximate index, i, should lead us
-					// directly to the call (even if another call has been placed since)
-					data.oId = ftStart.dwLowDateTime;
-
-					data.iGroup = _getPastTime(ftStart, data.szSecondaryText, 
-						SECONDARY_TEXT_LENGTH);
-					break;
-
-				case PROPID_IOM:
-					iom = pRecord[iProp].val.iVal;
-			        data.isMissed = (iom & 3) == 0;
-					break;
-			}
-		}
-
-        // populate the list Data structure
-        data.ID = i;
-
-        StringCchCopy(data.szPrimaryText, PRIMARY_TEXT_LENGTH,  
-            (pszName ? pszName
-                : pszNumber ? pszNumber
-                : pSettings->unknown_string)
-             );
-
-#ifdef DEBUG_SCREENSHOTS
-         data.isMissed = pEntry->iom == IOM_MISSED || i == 3;
-#endif
-
-        // calculate the hash for this entry, to check for duplicates
-        // type (TCHAR)IOM and pastTime will be something like 0, 1, 2, 
-        // so instead, make it '0', '1', '2'
-        pszHash2[0] = data.iGroup + 'A';
-        pszHash2[1] = (TCHAR)iom + 'A';
-        pszHash2[2] = 0;
-        if (pszName)
-            StringCchCat(pszHash2, PRIMARY_TEXT_LENGTH*2, pszName);
-        if (pszNumber)
-            StringCchCat(pszHash2, PRIMARY_TEXT_LENGTH*2, pszNumber);
-
-        // this is a repeated item
-        if (0 == _tcscmp(pszHash2, pszHash1)) {
-            repeats++;
-        }
-
-        // this is not a repeated item
-        else {
-            // the previous item was repeated
-            if (repeats > 0) {
-                int len = _tcslen(dataPrev.szPrimaryText);
-                StringCchPrintf(
-                    &dataPrev.szPrimaryText[len], PRIMARY_TEXT_LENGTH - len,
-                    TEXT(" [%d]"), repeats + 1);
-
-                repeats = 0;
-            }
-
-            // actually write the data to the cache file
-            if (i > 0)
-                adder(&dataPrev); 
-
-            // Shift data down into dataPrev
-            memcpy(&dataPrev, &data, sizeof(DataItem));
-        }
-
-        StringCchCopy(pszHash1, PRIMARY_TEXT_LENGTH*2, pszHash2); 
-    }
-
-    // add the last list item
-	if (oid)
-		adder(&data); 
-
-Error:
-    // more cleanup
-	if (pRecord)
-		LocalFree(pRecord);
-	if (hdb != 0 && hdb == INVALID_HANDLE_VALUE)
-	    CloseHandle(hdb);
-
-	//CeUnmountDBVol(&guid);
-	//guid.Data1 = NULL;
-
-#ifdef BENCHMARK_LOAD_TIME
-    DWORD tTime3 = ::GetTickCount();
-    TCHAR tszTimes[1024];
-	StringCchPrintf(tszTimes, 1024, TEXT("open:%d, iterate:%d, per entry:%d"),
-		(tTime2-tTime1), (tTime3-tTime2), (tTime3-tTime1)/i);
-    MessageBox(NULL, tszTimes, TEXT("Benchmark"), 0);
-#endif
-
-    return hr;
-}
-
-
-HRESULT RecentsPopulateOLD(DataItem * parent, void (*adder)(DataItem*),
                         CSettings * pSettings) {
     HRESULT hr = S_OK;
     HANDLE ph = 0;
     DWORD lastEntryIndex = 0;
     DWORD currentEntryIndex = 0;
     CALLLOGENTRY *pEntry = NULL;
+    DWORD dwNumberOfBytesWritten = 0;
 
     DataItem dataPrev = {0};
     DataItem data = {0};
@@ -261,9 +58,6 @@ HRESULT RecentsPopulateOLD(DataItem * parent, void (*adder)(DataItem*),
     data.isFavorite = false;
     data.type = diListItem;
 
-#ifdef BENCHMARK_LOAD_TIME
-    DWORD tTime1 = ::GetTickCount();
-#endif
     
     // these are for detecting repeating items
     TCHAR pszHash1[PRIMARY_TEXT_LENGTH*2] = {0};
@@ -297,10 +91,6 @@ HRESULT RecentsPopulateOLD(DataItem * parent, void (*adder)(DataItem*),
 
     hr = PhoneSeekCallLog(ph, CALLLOGSEEK_BEGINNING, 0, &currentEntryIndex);
     CHR(hr);
-
-#ifdef BENCHMARK_LOAD_TIME
-    DWORD tTime2 = ::GetTickCount();
-#endif
 
 	pEntry = new CALLLOGENTRY();
     //cbSize MUST be set before passing the struct in to the function!
@@ -401,13 +191,6 @@ Error:
     }
 
     hr = PhoneCloseCallLog(ph);
-
-#ifdef BENCHMARK_LOAD_TIME
-    DWORD tTime3 = ::GetTickCount();
-    TCHAR tszTimes[1024];
-	StringCchPrintf(tszTimes, 1024, TEXT("open:%d, iterate:%d, per entry:%d"), (tTime2-tTime1), (tTime3-tTime2), (tTime3-tTime1)/lastEntryIndex);
-    MessageBox(NULL, tszTimes, TEXT("Benchmark"), 0);
-#endif
 
     return hr;
 }
@@ -805,17 +588,17 @@ HRESULT RecentDetailsClick(DataItem * data, float x, int * newScreen,
     switch (data->type) {
         case diCallButton:
             Call(pEntry->pszNumber, pEntry->pszName);
-            *newScreen = NEWSCREEN_BACK_ON_DEACTIVATE;
+            *newScreen = -3;
             break;
 
         case diSmsButton:
             SendSMS(pEntry->pszNumber, pEntry->pszName);
-            *newScreen = NEWSCREEN_BACK_ON_DEACTIVATE;
+            *newScreen = -3;
             break;
 
         case diSaveContactButton:
             AddContactByNumber(pEntry->pszNumber);
-            *newScreen = NEWSCREEN_BACK;
+            *newScreen = -1;
             break;
     }
 

@@ -55,4 +55,3 @@ along with iContact.  If not, see <http://www.gnu.org/licenses/>.
 #define SKIN_COLOR_KEYBOARD_TEXT			13	//dcdcdc
 #define SKIN_COLOR_KEYBOARD_BACKGROUND		14	//464646
 #define SKIN_COLOR_KEYBOARD_GRID			15	//646464
-#define SKIN_COLOR_SCROLLBAR                16  //
