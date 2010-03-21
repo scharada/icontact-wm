@@ -1,0 +1,37 @@
+<application>
+<name>iContact</name>
+<version>0.71</version>
+<description><b>iContact</b><br />A new implementation of iContact by supbro building on the source code release by Larna, with aditional features including Full screen, and a top bar based on A_Cs S2 series.
+<br />
+<br />
+Check http://forum.xda-developers.com/showthread.php?p=2245963 for more info!
+<br />
+<br />
+<b>Change Log:</b><br/><br />
+<b>0.71</b> - May 30, 2008
+<ul>
+  <li>Added new and improved ABC keyboard</li>
+  <li>Improved physical keyboard support</li>
+  <li>Added option for exit on close</li>
+  <li>Added option for exit on action</li>
+  <li>Improved functionality of virtual scroll bar</li>
+  <li>Added AppToDate support</li>
+</ul>
+<b>0.7</b> - May 28, 2008
+<ul>
+  <li>Added skin and color scheme support</li>
+  <li>Made app "full screen" with titlebar matching A_C's S2P and S2U2</li>
+  <li>Added call log</li>
+  <li>Added quick scroll-to support</li>
+  <li>Tied favorites to built-in categories</li>
+  <li>Added .cab installer for easy uninstall</li>
+  <li>Fixed icon to a proper transparent one</li>
+</ul>
+<b>0.6</b> - April 6, 2008
+<ul>
+  <li>Initial release of Source Code on xda-developers</li>
+</ul>
+</description>
+<versionurl>http://www.supware.net/iContact/net.supware.icontact.xml</versionurl>
+<caburl>http://www.supware.net/iContact/iContact.cab</caburl>
+</application>
