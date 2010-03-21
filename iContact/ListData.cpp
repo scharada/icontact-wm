@@ -1,302 +1,371 @@
-/*******************************************************************
-This file is part of iContact.
-
-iContact is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-iContact is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with iContact.  If not, see <http://www.gnu.org/licenses/>.
-*******************************************************************/
-
-#include <windows.h>
-#include <vector>
-
+#include <stdafx.h>
 #include "iContact.h"
 #include "ListData.h"
 #include "PhoneUtils.h"
-#include "FileUtils.h"
-#include "Macros.h"
 
-TCHAR szListCacheFn[MAX_PATH];
-std::vector<DataItem> vListItems;
-int listSelectedIndex = -1;
-
-HANDLE hCache = NULL;
-
-HBITMAP listHBitmap = NULL;
-UINT listNBitmapHeight = 0;
-UINT listNBitmapWidth = 0;
-
-HRESULT listLoadFromCache(DataItem * parent, ScreenDefinition screen, 
-                 CSettings * pSettings, bool useCache);
-
-HRESULT listPopulate(DataItem * parent, ScreenDefinition screen,
-                     CSettings * pSettings);
-
-// straight to memory
-void addDataItem(DataItem * data);
-
-// write to file hCache
-void writeDataItem(DataItem * data);
-
-void ListClear(void) {
-    vListItems.clear();
-
-    BOOL result = true;
-    if (listHBitmap)
-        result = DeleteObject((HGDIOBJ)listHBitmap);
-    listHBitmap = NULL;
-    listNBitmapHeight = 0;
-    listNBitmapWidth = 0;
-    listSelectedIndex = -1;
+ListData::ListData() {
+    this->_detailItems = new DataDetail[MAX_SUBLIST_ITEMS];
+    this->_arrayLength = 0;
+    this->_currentDetailIndex = -1;
+    this->_currentItemIndex = -1;
+    this->_itemDetailCount = 0;
+    this->_canFavorite = false;
+    this->_canAdd = false;
+    this->_hBitmap = NULL;
+    this->_nBitmapHeight = 0;
+    this->_nBitmapWidth = 0;
+	this->_listCounter = 0;
 }
 
-HRESULT ListLoad(DataItem * parent, ScreenDefinition screen, 
-                 CSettings * pSettings, bool useCache) {
+ListData::ListData(Settings * pSettings) {
+    this->_settings = pSettings;
+}
 
-    // this list should be cached
-    if (screen.filename != NULL) {
-        return listLoadFromCache(parent, screen, pSettings, useCache);
+ListData::~ListData(void) {
+    this->Release();
+    delete [] this->_items;
+    delete [] this->_detailItems;
+}
+
+Data ListData::GetCurrentItem() {
+    return this->_items[this->_currentItemIndex];
+}
+
+Data ListData::GetItem(int index) {
+    return this->_items[index];
+}
+
+Data ListData::SelectItem(int index) {
+    this->_currentItemIndex = index;
+    return this->_items[index];
+}
+
+Data ListData::SelectPreviousItem(int defaultIndex, bool byGroup) {
+    int index = this->_currentItemIndex;
+
+	if (index < 0) {
+		index = defaultIndex;
+	}
+    else if (index == 0) {
     }
-
-    // this list won't be cached
+    else if (byGroup) {
+        // Jump to the previous group
+        index--;
+        while (index > 0 && 
+            !this->IsItemNewGroup(index))
+            index--;
+    }
     else {
-        ListClear();
-        ASSERT(screen.fnPopulate != NULL);
-        return screen.fnPopulate(parent, addDataItem, pSettings);
-    }
+		index = max(0, index - 1);
+	}
+
+    this->_currentItemIndex = index;
+    return this->_items[index];
 }
 
-void addDataItem(DataItem * data) {
-    vListItems.push_back(*data);
+Data ListData::SelectNextItem(int defaultIndex, bool byGroup) {
+    int index = this->_currentItemIndex;
+
+    if (index < 0) {
+		index = defaultIndex;
+	}
+    else if (byGroup) {
+        // Jump to the next group
+        int max = this->_listCounter - 1;
+
+        if (index < max) {
+            index++;
+            while (index < max && 
+                !this->IsItemNewGroup(index))
+                index++;
+        }
+    }
+	else {
+		index = min(this->_listCounter - 1, index + 1);
+	}
+
+    this->_currentItemIndex = index;
+    return this->_items[index];
 }
 
-void writeDataItem(DataItem * data) {
-    DWORD dwNumberOfBytesWritten;
-    WriteFile(hCache, data, sizeof(DataItem), &dwNumberOfBytesWritten, NULL);
+int ListData::GetCurrentItemIndex() {
+    return this->_currentItemIndex;
 }
 
-HRESULT listLoadFromCache(DataItem * parent, ScreenDefinition screen,
-                         CSettings * pSettings, bool useCache) {
+void ListData::UnselectItem() {
+    this->_currentItemIndex = -1;
+    if (this->_hBitmap)
+        DeleteObject((HGDIOBJ)this->_hBitmap);
+    this->_hBitmap = NULL;
+}
 
-    HRESULT hr;
-    HANDLE hCache = INVALID_HANDLE_VALUE;
+void ListData::GetItemGroup(int index, TCHAR * pszGroup) {
+    pszGroup[0] = this->_items[index].wcGroup;
+    pszGroup[1] = 0;
+}
 
-    GetCurDirFilename(szListCacheFn, screen.filename);
+bool ListData::IsItemNewGroup(int index) {
+	if (index == 0)
+		return true;
 
-    if (useCache) {
-        // Try to load data from cache
-        hCache = CreateFile(szListCacheFn, GENERIC_READ, 0, NULL, 
-            OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    return this->_items[index - 1].wcGroup != this->_items[index].wcGroup;
+}
+
+int ListData::GetCurrentDetailIndex() {
+    return this->_currentDetailIndex;
+}
+
+const TCHAR * ListData::GetCurrentDetailTitle() {
+    return this->_currentDetailTitle;
+}
+
+HRESULT ListData::PerformCurrentDetailAction(int pos) {
+    HRESULT hr = S_OK;
+    DataDetail detail = this->_detailItems[this->_currentDetailIndex];
+    TCHAR * itemText = this->_items[this->_currentItemIndex].szPrimaryText;
+
+    // used by "url"
+    SHELLEXECUTEINFO ShExecInfo = {0};
+
+    // We have to clear out the bitmap here because 
+    // EditItem or DisplayItem could change it
+    if (this->_hBitmap)
+        ::DeleteObject((HGDIOBJ)this->_hBitmap);
+    this->_hBitmap = NULL;
+
+    switch (detail.type) {
+        case diEditButton:
+            this->EditItem();
+		    break;
+
+        case diDetailsButton:
+            hr = this->DisplayItem();
+		    break;
+
+        case diCallButton:
+            Call(detail.arg1, detail.arg2);
+            break;
+
+        case diSmsButton:
+            SendSMS(detail.arg1, detail.arg2);
+            break;
+
+        case diSaveContactButton:
+            AddContactByNumber(detail.arg1);
+            break;
+
+        case diPhone:
+            if (pos > 1)
+                SendSMS(detail.text, itemText);
+            else 
+                Call(detail.text, itemText);
+
+		    break;
+
+        case diEmail:
+            SendEMail(this->_settings->email_account, detail.text);
+		    break;
+
+        case diUrl:
+            ShExecInfo.cbSize = sizeof(SHELLEXECUTEINFO);
+            ShExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
+            ShExecInfo.hwnd = NULL;
+            ShExecInfo.lpVerb = TEXT("open");
+            ShExecInfo.lpFile = detail.text;
+            ShExecInfo.lpParameters = NULL;
+
+            ShExecInfo.lpDirectory = NULL;
+            ShExecInfo.nShow = SW_SHOW;
+            ShExecInfo.hInstApp = NULL; 
+
+            ShellExecuteEx(&ShExecInfo);
+            break;
+
+        default:
+            hr = ERROR_NO_MATCH;
     }
 
-    if (hCache == INVALID_HANDLE_VALUE) {
-        CHR(listPopulate(parent, screen, pSettings));
-
-        hCache = CreateFile(szListCacheFn, GENERIC_READ, 0, NULL, 
-            OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    }
-
-    DWORD dwFileSize = GetFileSize(hCache, NULL);
-
-    ListClear();
-    DWORD dwBytesRead;
-    SetFilePointer(hCache, 0, NULL, FILE_BEGIN);
-    DataItem data;
-    while (ReadFile(hCache, &data, sizeof(DataItem), &dwBytesRead, NULL)) {
-        CBR(dwBytesRead == sizeof(DataItem));
-        vListItems.push_back(data);
-    }
-
-    hr = S_OK;
-
-Error:
-    CloseHandle(hCache);
     return hr;
 }
 
-HRESULT listPopulate(DataItem * parent, ScreenDefinition screen, 
-                     CSettings * pSettings) {
-    HRESULT hr;
-
-    ASSERT(screen.fnPopulate != NULL);
-
-    GetCurDirFilename(szListCacheFn, screen.filename);
-
-    hCache = CreateFile(szListCacheFn, GENERIC_WRITE, 0, NULL, 
-        CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    CBR(hCache != INVALID_HANDLE_VALUE);
-
-    hr = screen.fnPopulate(parent, writeDataItem, pSettings);
-    CHR(hr);
-
-    hr = S_OK;
-
-Error:
-    CloseHandle(hCache);
-    hCache = NULL;
-    return hr;
-}
-
-int GetItemCount(void) {
-    return vListItems.size();
-}
-
-DataItem GetCurrentItem(void) {
-    return GetItem(listSelectedIndex);
-}
-
-DataItem GetItem(int index) {
-    ASSERT(index >= 0 && index < (int)vListItems.size());
-    return vListItems[index];
-}
-
-bool CanSelectItem(int index) {
-	if (index < 0 || index >= (int)vListItems.size())
-		return false;
-
-    int t = vListItems[index].type;
-    return t == diListItem
-        || t == diUrl
-        || t == diPhone
-        || t == diEmail
-        || t == diDetailsButton
-        || t == diEditButton
-        || t == diCallButton
-        || t == diSmsButton
-        || t == diSaveContactButton
-        || t == diCreateShortcutButton
-		|| t == diRemoveShortcutButton;
-}
-
-DataItem SelectItem(int index) {
-    listSelectedIndex = index;
-    return GetCurrentItem();
-}
-
-int SelectFirstItem() {
-	int index = 0;
-    while (index < (int)vListItems.size() && !CanSelectItem(index))
-        index++;
-
-	// Select nothing (-1) if nothing can be selected
-	listSelectedIndex = index < (int)vListItems.size() ? index : -1;
-
-	return listSelectedIndex;
-}
-
-int SelectLastItem() {
-	int index = vListItems.size();
-    while (index >= 0 && !CanSelectItem(index))
-        index--;
-
-	// index will be -1 if nothing available; that's what we want.
-	// -1 means select nothing.
-	listSelectedIndex = index;
-
-	return listSelectedIndex;
-}
-
-int SelectPreviousItem(int defaultIndex, bool byGroup) {
-
-    int index 
-		= listSelectedIndex == 0 ? 0
-		: listSelectedIndex > 0 ? listSelectedIndex - 1
-        : defaultIndex;
-    
-    while (
-        index >= 0 
-        && (
-               (byGroup && !IsItemNewGroup(index))
-            || !CanSelectItem(index)
-        )
-    )
-        index--;
-
-    listSelectedIndex = index >= 0 ? index : -1;
-
-    return listSelectedIndex;
-}
-
-int SelectNextItem(int defaultIndex, bool byGroup) {
-
-    int index 
-		= listSelectedIndex == vListItems.size() - 1 ? vListItems.size() - 1
-		: listSelectedIndex >= 0 ? listSelectedIndex + 1
-        : defaultIndex;
-    
-    while (
-        index < (int)vListItems.size() 
-        && (
-               (byGroup && !IsItemNewGroup(index))
-            || !CanSelectItem(index)
-        )
-    )
-        index++;
-
-    listSelectedIndex = index < (int)vListItems.size() ? index : -1;
-
-    return listSelectedIndex;
-}
-
-int GetCurrentItemIndex(void) {
-    return listSelectedIndex;
-}
-
-void UnselectItem(void) {
-    listSelectedIndex = -1;
-}
-
-bool IsItemNewGroup(int index) {
-    ASSERT(index < (int)vListItems.size());
-
-    if (index == 0)
-        return vListItems[index].iGroup != 0;
-
-    return vListItems[index - 1].iGroup != vListItems[index].iGroup;
-}
-
-bool IsItemNewType(int index) {
-    ASSERT(index < (int)vListItems.size());
-
-    if (index == 0)
+bool ListData::SelectDetail(int index) {
+    if (index == -1) {
+        this->_currentDetailIndex = index;
         return true;
-
-    return vListItems[index - 1].type != vListItems[index].type;
-}
-
-int CountSameTypeAs(int index, int limit) {
-    ASSERT(index < (int)vListItems.size());
-    DataItemType t = vListItems[index].type;
-
-    int i = index + 1;
-    while (i < (int)vListItems.size() && vListItems[i].type == t && i - index < limit)
-        i++;
-
-    return i - index;
-}
-
-HBITMAP GetHBitmap(DataItem * parent, ScreenDefinition screen, int size) {
-    if (NULL == listHBitmap && NULL != screen.fnGetHBitmap) {
-        listNBitmapWidth = size;
-        listNBitmapHeight = size;
-        screen.fnGetHBitmap(parent,
-            &listHBitmap, &listNBitmapWidth, &listNBitmapHeight); 
     }
-    return listHBitmap;
+
+    if (index >= this->_itemDetailCount) {
+        return false;
+    }
+
+    DataDetail detail = this->_detailItems[index];
+    DataItemType dit = detail.type;
+
+    if (dit == diEditButton
+        || dit == diDetailsButton
+        || dit == diCallButton
+        || dit == diSmsButton
+        || dit == diSaveContactButton
+        || dit == diPhone
+        || dit == diEmail
+        || dit == diUrl) {
+        this->_currentDetailIndex = index;
+        return true;
+    }
+
+    return false;
+    
 }
 
-int GetHBitmapWidth(void) {
-    return listNBitmapWidth;
+void ListData::IncrementDetailIndex(int by) {
+    int max = this->_itemDetailCount;
+        
+    // there may be no actions; in this case just don't do anything
+    if (!max)
+        return;
+
+    // This turns "-1" into "max-1" to fix %
+    by += max;
+
+    int index = (this->_currentDetailIndex + by) % max;
+    int count = 1;
+    DataItemType type = this->_detailItems[index].type;
+
+    // These types cannot be "selected"
+    while (count++ < max && 
+        (type == diNothing
+        || type == diCompany
+        || type == diCategory
+        || type == diText
+        || type == diName)) {
+
+        index = (index + by) % max;
+        type = this->_detailItems[index].type;
+    }
+
+    if (count <= max)
+        this->_currentDetailIndex = index;
 }
 
-int GetHBitmapHeight(void) {
-    return listNBitmapHeight;
+DataDetail ListData::GetItemDetail(int index) {
+    return this->_detailItems[index];
 }
+
+int ListData::GetItemCount() {
+    return this->_listCounter;
+}
+
+int ListData::GetItemDetailCount() {
+    return this->_itemDetailCount;
+}
+
+bool ListData::_addListItem(int id, const TCHAR * tszPrimary, 
+    const TCHAR * tszSecondary, TCHAR wcGroup, LONG oId, COLORREF rgbPrimary) {
+
+    int i = this->_listCounter;
+
+    if (i >= this->_arrayLength)
+        return false;
+
+    this->_items[i].ID = id;
+    this->_items[i].oId = oId;
+    this->_items[i].wcGroup = wcGroup;
+    this->_items[i].rgbPrimaryText = rgbPrimary;
+
+    if (tszPrimary)
+        StringCchCopy(this->_items[i].szPrimaryText, PRIMARY_TEXT_LENGTH, 
+        tszPrimary);
+
+    if (tszSecondary)
+        StringCchCopy(this->_items[i].szSecondaryText, 10, tszSecondary);
+
+    this->_items[i].nPrimaryTextLength 
+        = _tcslen(this->_items[i].szPrimaryText);
+
+	this->_items[i].nSecondaryTextLength 
+        = _tcslen(this->_items[i].szSecondaryText);
+	
+    this->_listCounter++;
+    return true;
+}
+
+void ListData::_addDetail(DataItemType type, const TCHAR * text, 
+    const TCHAR * label, const TCHAR * arg1, const TCHAR * arg2) {
+
+    int c = this->_itemDetailCount;
+    if (c == MAX_SUBLIST_ITEMS)
+        return;
+
+    if (type == diNothing) {
+        this->_itemDetailCount++;
+        this->_detailItems[c].type = type;
+        return;
+    }
+
+    else if (text == NULL || _tcslen(text) == 0) {
+        return;
+    }
+
+    else {
+        this->_itemDetailCount++;
+        this->_detailItems[c].type = type;
+
+        // primary text
+        StringCchCopy(this->_detailItems[c].text, 
+            PRIMARY_TEXT_LENGTH, text);
+
+        // label
+        if (label == NULL || _tcslen(label) == 0)
+            this->_detailItems[c].label[0] = 0;
+
+        else 
+            StringCchCopy(this->_detailItems[c].label, 
+                SECONDARY_TEXT_LENGTH, label);
+
+        // arg1
+        if (arg1 == NULL || _tcslen(arg1) == 0)
+            this->_detailItems[c].arg1[0] = 0;
+
+        else 
+            StringCchCopy(this->_detailItems[c].arg1, 
+                PRIMARY_TEXT_LENGTH, arg1);
+
+        // arg2
+        if (arg2 == NULL || _tcslen(arg2) == 0)
+            this->_detailItems[c].arg2[0] = 0;
+
+        else 
+            StringCchCopy(this->_detailItems[c].arg2, 
+                PRIMARY_TEXT_LENGTH, arg2);
+    }
+}
+
+HRESULT ListData::PopulateDetails() {
+    return this->PopulateDetailsFor(this->_currentItemIndex);
+}
+
+HBITMAP ListData::GetHBitmap(int size) {
+    if (NULL == this->_hBitmap)
+        this->_loadBitmap(size);
+
+    return this->_hBitmap;
+}
+
+int ListData::GetHBitmapWidth() {
+    return this->_nBitmapWidth;
+}
+
+int ListData::GetHBitmapHeight() {
+    return this->_nBitmapHeight;
+}
+
+void ListData::Release(void) {}
+bool ListData::CanFavorite(void) { return this->_canFavorite; }
+bool ListData::CanAdd(void) { return this->_canAdd; }
+void ListData::ToggleFavorite() {}
+HRESULT ListData::DisplayItem() { return S_OK; }
+void ListData::EditItem() {}
+void ListData::AddItem() {}
+HRESULT ListData::_loadBitmap (int size) { return S_OK; }
+HRESULT ListData::Populate(void) { return S_OK; }
+HRESULT ListData::PopulateDetailsFor(int id) { return S_OK; }

@@ -1,23 +1,26 @@
 <application>
   <name>iContact</name>
-  <version>0.95</version>
+  <version>0.76</version>
   <description>
-    <b>iContact</b><br />
-    iContact is an all-inclusive finger-friendly contact manager for Windows Mobile PocketPC phones. It's easily skinnable, intuitive, and replaces the standard Windows Mobile contact chooser.<br />
-    <br />
-    Check http://www.supware.net/iContact for more info!
-    <br />
-    <br />
-    <b>Release Notes:</b><br/><br />
-    <b>0.95</b> - September 29, 2009
-    <ul>
-      <li>[+] Added "Remove Shortcut" button to details screen if appropriate</li>
-      <li>[+] Added "createshortcut" and "removeshortcut" to language file</li>
-      <li>[+] Added contact shortcut icons to start menu shortcuts for Windows Mobile 6.5</li>
-      <li>[+] Added ability for hardware "*" key to favorite/defavorite a contact</li>
-      <li>[#] Fixed outgoing calls to numbers with no name displaying [null]</li>
-      <li>[#] Hid SIP button being displayed by iContactAE</li>
-    </ul>
+    <![CDATA[<b>iContact</b><br />A new implementation of iContact by supbro building on the source code release by Larna, with aditional features including Full screen, and a top bar based on A_Cs S2 series.
+  <br />
+  <br />
+  Check http://www.supware.net/iContact for more info!
+  <br />
+  <br />
+  <b>Release Notes:</b><br/><br />
+  <b>0.76</b> - July 26, 2008
+  <ul>
+    <li>Added VGA Compatiblity!</li>
+    <li>Added company phone number (also added "company" to language file)</li>
+    <li>Now allows you to de-favorite a favorite from within the favorites details screen</li>
+    <li>Now allows you to click the keyboard popup from favorites or call details: will switch to all contacts first.</li>
+    <li>Fixed bug with newly favorited contacts not showing up as favorite in contacts list</li>
+    <li>Added wait cursor feedback for operations taking a long time</li>
+    <li>Added command line arguments: -favorites , -recents , -contacts , -dialer , -search</li>
+    <li>Removed "CategoriesField" from language, it's no longer needed</li>
+    <li>Added "Save to Contacts" in call log details screen (thanks [getlist]!)</li>
+  </ul>]]>
   </description>
   <versionurl>http://www.supware.net/iContact/net.supware.icontact.xml</versionurl>
   <caburl>http://www.supware.net/iContact/iContact.cab</caburl>
