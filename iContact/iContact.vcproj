@@ -45,7 +45,7 @@
 				PreprocessorDefinitions="_DEBUG;_WIN32_WCE=$(CEVER);UNDER_CE;$(PLATFORMDEFINES);WINCE;DEBUG;_WINDOWS;$(ARCHFAM);$(_ARCHFAM_);_UNICODE;UNICODE;POCKETPC2003_UI_MODEL"
 				MinimalRebuild="true"
 				RuntimeLibrary="1"
-				UsePrecompiledHeader="0"
+				UsePrecompiledHeader="2"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -97,7 +97,7 @@
 				ForceDirty="-1"
 				RemoteDirectory=""
 				RegisterOutput="0"
-				AdditionalFiles=""
+				AdditionalFiles="skin.png|$(ProjectDir)|\%CSIDL_PROGRAM_FILES%\iContact|0"
 			/>
 			<DebuggerTool
 			/>
@@ -131,7 +131,7 @@
 				FavorSizeOrSpeed="2"
 				PreprocessorDefinitions="NDEBUG;_WIN32_WCE=$(CEVER);UNDER_CE;$(PLATFORMDEFINES);WINCE;_WINDOWS;$(ARCHFAM);$(_ARCHFAM_);_UNICODE;UNICODE;POCKETPC2003_UI_MODEL"
 				RuntimeLibrary="0"
-				UsePrecompiledHeader="0"
+				UsePrecompiledHeader="2"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -150,6 +150,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=" /subsystem:windowsce,5.01"
+				AdditionalDependencies="phone.lib"
 				OutputFile="$(OutDir)/iContact.exe"
 				LinkIncremental="1"
 				DelayLoadDLLs="$(NOINHERIT)"
@@ -185,7 +186,7 @@
 				ForceDirty="-1"
 				RemoteDirectory=""
 				RegisterOutput="0"
-				AdditionalFiles=""
+				AdditionalFiles="skin.png|$(ProjectDir)|\%CSIDL_PROGRAM_FILES%\iContact|0"
 			/>
 			<DebuggerTool
 			/>
@@ -199,14 +200,6 @@
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
-			<File
-				RelativePath=".\CSettings.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\FileUtils.cpp"
-				>
-			</File>
 			<File
 				RelativePath=".\GraphicFunctions.cpp"
 				>
@@ -232,19 +225,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\RegistryUtils.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Sensor.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ShortcutUtils.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ShortcutUtilsData.cpp"
+				RelativePath=".\Settings.cpp"
 				>
 			</File>
 			<File
@@ -278,14 +259,6 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\CSettings.h"
-				>
-			</File>
-			<File
-				RelativePath=".\FileUtils.h"
-				>
-			</File>
-			<File
 				RelativePath=".\GraphicFunctions.h"
 				>
 			</File>
@@ -306,15 +279,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Macros.h"
-				>
-			</File>
-			<File
 				RelativePath=".\PhoneUtils.h"
 				>
 			</File>
 			<File
-				RelativePath=".\RegistryUtils.h"
+				RelativePath=".\poom.h"
 				>
 			</File>
 			<File
@@ -322,19 +291,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Sensor.h"
+				RelativePath=".\Settings.h"
 				>
 			</File>
 			<File
-				RelativePath=".\ShortcutUtils.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ShortcutUtilsData.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Skin.h"
+				RelativePath=".\SimpleIni.h"
 				>
 			</File>
 			<File
@@ -345,10 +306,6 @@
 				RelativePath=".\Titlebar.h"
 				>
 			</File>
-			<File
-				RelativePath=".\Version.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
@@ -356,7 +313,7 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<File
-				RelativePath="..\data\iContact.ico"
+				RelativePath=".\iContact.ico"
 				>
 			</File>
 			<File

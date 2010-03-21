@@ -1,54 +1,32 @@
-/*******************************************************************
-This file is part of iContact.
-
-iContact is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-iContact is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with iContact.  If not, see <http://www.gnu.org/licenses/>.
-*******************************************************************/
-
 #pragma once
 
 #include "stdafx.h"
-#include "macros.h"
-#include "resourceppc.h"
+
 #include <pimstore.h>
 
-// These functions are for categories
-HRESULT PoomCategoriesPopulate(DataItem * parent, void (*adder)(DataItem*),
-                     CSettings * pSettings);
-HRESULT PoomCategoriesGetTitle(DataItem * parent, TCHAR * buffer, int cchDest,
-                     CSettings * pSettings);
-HRESULT PoomCategoriesClick(DataItem * data, float x, 
-                  int * newScreen, CSettings * pSettings);
+#include "Settings.h"
+#include "ListData.h"
 
-// These functions are for the main list of contacts
-HRESULT PoomPopulate(DataItem * parent, void (*adder)(DataItem*),
-                     CSettings * pSettings);
-HRESULT PoomGetTitle(DataItem * parent, TCHAR * buffer, int cchDest,
-                     CSettings * pSettings);
-HRESULT PoomGetGroup(DataItem * data, TCHAR * buffer, int cchDest,
-                     CSettings * pSettings);
-HRESULT PoomClick(DataItem * data, float x, 
-                  int * newScreen, CSettings * pSettings);
-HRESULT PoomAddItem();
+class ListDataPoom : public ListData {
+private:
+    IPOutlookApp * polApp;
+    IFolder * pCurrFldr;
+    IPOutlookItemCollection * pItemCol;
+	bool _bOnlyFavorites;
 
-// These functions are for a contact details screen
-HRESULT PoomDetailsPopulate(DataItem * parent, void (*adder)(DataItem*),
-                            CSettings * pSettings);
-HRESULT PoomDetailsGetTitle(DataItem * parent, TCHAR * buffer, int cchDest,
-                     CSettings * pSettings);
-HRESULT PoomDetailsClick(DataItem * data, float x,
-                         int * newScreen, CSettings * pSettings);
-HRESULT PoomDetailsToggleFavorite(DataItem * data, CSettings * pSettings);
+    bool InitPoom();
+    bool GetPoomFolder(int nFolder, IFolder ** ppFolder);
+    bool SetPoomCategories(LONG oId, BSTR bstrCategories);
+    void ShutdownPoom();
 
-HRESULT PoomDetailsLoadBitmap(DataItem * data, HBITMAP * phBitmap,
-                              UINT * puWidth, UINT * puHeight);
+public:
+
+    ListDataPoom(Settings *);
+	ListDataPoom(Settings *, bool);
+    void Clear(void);
+    void Populate(void);
+    int PopulateDetailsFor(int);
+    void AddToFavorites(int);
+    void RemoveFromFavorites(int);
+    void DisplayItem(int);
+};
